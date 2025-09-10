@@ -23,3 +23,6 @@
 .vscode
 .pio
 *.FCBak
+*.3mf
+*.stl
+*.gcode

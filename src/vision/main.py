@@ -1,10 +1,9 @@
 
 import sensor
 import time
-import math
 
 # Tracks a black line. Use [(128, 255)] for a tracking a white line.
-GRAYSCALE_THRESHOLD = [(0, 64)]
+GRAYSCALE_THRESHOLD = [(0, 30)]
 
 # Each roi is (x, y, w, h). The line detection algorithm will try to find the
 # centroid of the largest blob in each roi. The x position of the centroids
@@ -23,7 +22,7 @@ for r in ROIS:
 
 # Camera setup...
 sensor.reset()  # Initialize the camera sensor.
-sensor.set_pixformat(sensor.GRAYSCALE)  # use grayscale.
+sensor.set_pixformat(sensor.RGB565)  # use grayscale.
 sensor.set_framesize(sensor.QQVGA)  # use QQVGA for speed.
 sensor.skip_frames(time=2000)  # Let new settings take affect.
 sensor.set_auto_gain(False)  # must be turned off for color tracking
@@ -44,7 +43,6 @@ while True:
         if blobs:
             # Find the blob with the most pixels.
             largest_blob = max(blobs, key=lambda b: b.pixels())
-            print(largest_blob)
             # Draw a rect around the blob.
             img.draw_rectangle(largest_blob.rect())
             img.draw_cross(largest_blob.cx(), largest_blob.cy())

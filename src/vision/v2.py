@@ -17,7 +17,7 @@ ROIS = [
     (0, 50, 160, 20, 0.3),
     (0, 0, 160, 20, 0.1),
 ]
-
+position = ""
 weight_sum = 0
 for r in ROIS:
     weight_sum += r[4]
@@ -57,20 +57,23 @@ while True:
         if rects_blobs:
             largest_green_blob = rects_blobs[0]
             center_x = img.width() // 2
+            center_y = img.height() // 2
             green_x = largest_green_blob.cx()
+            green_y = largest_green_blob.cy()
 
             # Определяем позицию относительно центра (слева, центр, справа)
-            if len(rects_blobs) >= 2:
+            if len(rects_blobs) >= 2 and green_y < center_y:
                 position = "BOTH"
-            elif green_x < center_x:
+            elif green_x < center_x and green_y < center_y:
                 position = "LEFT"
-            elif green_x > center_x:
+            elif green_x > center_x and green_y < center_y:
                 position = "RIGHT"
 
             print("CROSS DETECTED")
             print("Green blob position relative to cross:", position)
         else:
             print("CROSS DETECTED, but no green blob found")
+            pass
 
     # Обработка линии (чёрной)
     centroid_sum = 0
@@ -90,9 +93,4 @@ while True:
                 CROSS = True
             else:
                 CROSS = False
-        else:
-            CROSS = False
 
-    # Вывод состояния CROSS
-    if not CROSS:
-        print("NO CROSS")

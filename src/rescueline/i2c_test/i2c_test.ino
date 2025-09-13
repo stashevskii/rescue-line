@@ -1,11 +1,12 @@
 #include <Wire.h>
-#define BAUD_RATE 19200
-#define CHAR_BUF 128
+
+constexpr int BAUD_RATE = 19200
+constexpr int CHAR_BUF = 128
 
 void setup() {
   Serial.begin(BAUD_RATE);
   Wire.begin();
-  delay(1000); // Give the OpenMV Cam time to bootup.
+  delay(1000);
 }
 
 void loop() {
@@ -13,24 +14,23 @@ void loop() {
   char buff[CHAR_BUF] = {0};
 
   Wire.requestFrom(0x12, 2);
-  if (Wire.available() == 2) { // got length?
+  if (Wire.available() == 2) {
 
     temp = Wire.read() | (Wire.read() << 8);
-    delay(1); // Give some setup time...
+    delay(1);
 
     Wire.requestFrom(0x12, temp);
-    if(Wire.available() == temp) { // got full message?
-
+    if (Wire.available() == temp) {
       temp = 0;
       while(Wire.available()) buff[temp++] = Wire.read();
 
     } else {
-      while(Wire.available()) Wire.read(); // Toss garbage bytes.
+      while(Wire.available()) Wire.read();
     }
   } else {
-    while(Wire.available()) Wire.read(); // Toss garbage bytes.
+    while (Wire.available()) Wire.read();
   }
 
   Serial.println(buff);
-  delay(1); // Don't loop to quickly.
+  delay(1);
 }

@@ -41,7 +41,8 @@ while True:
     img = sensor.snapshot()  # Take a picture and return the image.
 
     centroid_sum = 0
-
+    lineBlobX = 0
+    i = 0
     for r in ROIS:
         blobs = img.find_blobs(
             GRAYSCALE_THRESHOLD, roi=r[0:4], merge=True
@@ -53,6 +54,9 @@ while True:
             # Draw a rect around the blob.
             img.draw_rectangle(largest_blob.rect())
             img.draw_cross(largest_blob.cx(), largest_blob.cy())
+            if i == 0:
+                lineBlobX = largest_blob.cx()
+            i+=1
             if (largest_blob.pixels() >= 400):
                 print("Cross")
             else:
@@ -69,10 +73,10 @@ while True:
 
     # Находим ВСЕ зеленые пиксели
     green_blobs = img.find_blobs([green_threshold],
-    area_threshold=40,  # Минимальная площадь = 1 пиксель
-    pixels_threshold=50,
+    area_threshold=60,  # Минимальная площадь = 1 пиксель
+    pixels_threshold=40,
     merge=True,       # Не сливать области
-    margin=5)          # Минимальный отступ
+    margin=2)          # Минимальный отступ
 
     total_green_area = 0
     green_pixels_count = 0
@@ -82,9 +86,9 @@ while True:
     for blob in green_blobs:
         if blob.y()>40: # Пороговое значение y от верха экрана для отсеивания ненужных меток
             good_blobs += 1
-            if blob.x()<50: # Пороговое значение y от верха экрана для отсеивания ненужных меток
+            if blob.x()<lineBlobX: # Пороговое значение y от верха экрана для отсеивания ненужных меток
                 greenBlobsPos += 1
-            if blob.x()>50: # Пороговое значение y от верха экрана для отсеивания ненужных меток
+            if blob.x()>lineBlobX: # Пороговое значение y от верха экрана для отсеивания ненужных меток
                 greenBlobsPos += 2
         total_green_area += blob.area()
         green_pixels_count += blob.pixels()
@@ -92,6 +96,7 @@ while True:
     img.draw_string(5, 25, f"Blobs: {len(green_blobs)}", color=(0,255,0))
     img.draw_string(5, 5, f"good_blobs: {good_blobs}", color=(255,0,0))
     img.draw_string(5, 50, f"greenBlobsPos:{greenBlobsPos}", color=(255,255,0))
+    img.draw_string(lineBlobX, 100, f"X:{lineBlobX}", color=(0, 0, 255))
 
     # text = str(int(deflection_angle))
     # data = struct.pack("<%ds" % len(text), text)

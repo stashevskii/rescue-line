@@ -1,7 +1,8 @@
 #include <Wire.h>
 
-constexpr int BAUD_RATE = 19200
-constexpr int CHAR_BUF = 128
+constexpr int BAUD_RATE = 19200;
+constexpr int CHAR_BUF = 128;
+constexpr double KP = 0.7;
 
 void setup() {
   Serial.begin(BAUD_RATE);
@@ -17,7 +18,6 @@ void loop() {
   if (Wire.available() == 2) {
 
     temp = Wire.read() | (Wire.read() << 8);
-    delay(1);
 
     Wire.requestFrom(0x12, temp);
     if (Wire.available() == temp) {
@@ -31,6 +31,7 @@ void loop() {
     while (Wire.available()) Wire.read();
   }
 
-  Serial.println(buff);
-  delay(1);
+  double err = atoi(buff);
+  err *= KP;
+  
 }

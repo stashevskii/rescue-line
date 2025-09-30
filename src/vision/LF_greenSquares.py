@@ -10,16 +10,16 @@ import struct
 # i2c = pyb.I2C(4, pyb.I2C.SLAVE, addr=0x12)
 # print("Waiting for Arduino...")
 
-GRAYSCALE_THRESHOLD = [(0, 30)]
+GRAYSCALE_THRESHOLD = [(0, 25)]
 
 ROIS = [
-    (0, 100, 160, 20, 0.7),
-    (0, 50, 160, 20, 0.3),
-    (0, 10, 160, 20, 0.3),
+    (0, 80, 160, 20, 0.7),
+    (0, 40, 160, 20, 0.3),
+    (0, 5, 160, 20, 0.3),
 ]
 
 # Compute the weight divisor (we're computing this so you don't have to make weights add to 1).
-weight_sum = 0
+weight_sum = 10
 for r in ROIS:
     weight_sum += r[4]  # r[4] is the roi weight.
 
@@ -32,6 +32,7 @@ sensor.set_auto_gain(False)  # must be turned off for color tracking
 sensor.set_auto_whitebal(False)  # must be turned off for color tracking
 sensor.set_hmirror(True)  # Горизонтальное зеркальное отображение
 sensor.set_vflip(True)    # Вертикальное отображение (переворот)
+sensor.set_windowing((25, 25, 150, 150))
 
 green_threshold = (0, 100, -128, -10, -128, 127)
 clock = time.clock()  # Tracks FPS.
@@ -76,7 +77,7 @@ while True:
     area_threshold=60,  # Минимальная площадь = 1 пиксель
     pixels_threshold=40,
     merge=True,       # Не сливать области
-    margin=2)          # Минимальный отступ
+    margin=1)          # Минимальный отступ
 
     total_green_area = 0
     green_pixels_count = 0

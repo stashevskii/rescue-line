@@ -5,10 +5,10 @@ import pyb
 import struct
 
 # The hardware I2C bus for your OpenMV Cam is always I2C bus 2.
-# i2c = pyb.I2C(4, pyb.I2C.SLAVE, addr=0x12)
-# i2c.deinit()  # Fully reset I2C device...
-# i2c = pyb.I2C(4, pyb.I2C.SLAVE, addr=0x12)
-# print("Waiting for Arduino...")
+i2c = pyb.I2C(4, pyb.I2C.SLAVE, addr=0x12)
+i2c.deinit()  # Fully reset I2C device...
+i2c = pyb.I2C(4, pyb.I2C.SLAVE, addr=0x12)
+print("Waiting for Arduino...")
 
 GRAYSCALE_THRESHOLD = [(0, 30)]
 
@@ -66,17 +66,15 @@ while True:
 
     deflection_angle = math.degrees(deflection_angle)
 
-    # text = str(int(deflection_angle))
-    # data = struct.pack("<%ds" % len(text), text)
+    text = str(int(deflection_angle))
+    data = struct.pack("<%ds" % len(text), text)
 
-    # try:
-    #     i2c.send(
-    #         struct.pack("<h", len(data)), timeout=10000
-    #     )
-    #     try:
-    #         i2c.send(data, timeout=10000)
-    #         print("Sent Data!")
-    #     except OSError:
-    #         pass
-    # except OSError:
-    #    pass
+    try:
+        i2c.send(struct.pack("<h", len(data)), timeout=10000)
+        try:
+            i2c.send(data, timeout=10000)
+            print("Sent Data!")
+        except OSError:
+            pass
+    except OSError:
+        pass

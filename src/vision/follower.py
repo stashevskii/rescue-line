@@ -5,10 +5,9 @@ import pyb
 import struct
 
 # The hardware I2C bus for your OpenMV Cam is always I2C bus 2.
-# i2c = pyb.I2C(4, pyb.I2C.SLAVE, addr=0x12)
-# i2c.deinit()  # Fully reset I2C device...
-# i2c = pyb.I2C(4, pyb.I2C.SLAVE, addr=0x12)
-# print("Waiting for Arduino...")
+i2c = pyb.I2C(4, pyb.I2C.SLAVE, addr=0x12)
+i2c.deinit()  # Fully reset I2C device...
+i2c = pyb.I2C(4, pyb.I2C.SLAVE, addr=0x12)
 
 GRAYSCALE_THRESHOLD = [(0, 30)]
 
@@ -30,7 +29,7 @@ sensor.set_framesize(sensor.QQVGA)  # use QQVGA for speed.
 sensor.skip_frames(time=2000)  # Let new settings take affect.
 sensor.set_auto_gain(False)  # must be turned off for color tracking
 sensor.set_auto_whitebal(False)  # must be turned off for color tracking
-# sensor.set_vflip(True)
+sensor.set_vflip(True)
 clock = time.clock()  # Tracks FPS.
 
 while True:
@@ -52,31 +51,24 @@ while True:
             img.draw_rectangle(largest_blob.rect())
             img.draw_cross(largest_blob.cx(), largest_blob.cy())
 
-            if (largest_blob.pixels() >= 400):
-                print("Cross")
-            else:
-                print("No cross")
-
             centroid_sum += largest_blob.cx() * r[4]
 
     center_pos = centroid_sum / weight_sum
-
     deflection_angle = 0
     deflection_angle = -math.atan((center_pos - 80) / 60)
-
     deflection_angle = math.degrees(deflection_angle)
 
-    # text = str(int(deflection_angle))
-    # data = struct.pack("<%ds" % len(text), text)
+    text = str(int(deflection_angle))
+    data = struct.pack("<%ds" % len(text), text)
 
-    # try:
-    #     i2c.send(
-    #         struct.pack("<h", len(data)), timeout=10000
-    #     )
-    #     try:
-    #         i2c.send(data, timeout=10000)
-    #         print("Sent Data!")
-    #     except OSError:
-    #         pass
-    # except OSError:
-    #    pass
+    try:
+        i2c.send(
+            struct.pack("<h", len(data)), timeout=10000
+        )
+        try:
+            i2c.send(data, timeout=10000)
+            print("Sent Data!")
+        except OSError:
+            pass
+    except OSError:
+       pass

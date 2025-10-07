@@ -1,4 +1,10 @@
 #include "config.hpp"
+#include <Wire.h>
+
+constexpr int BAUD_RATE = 19200;
+constexpr int CHAR_BUF = 128;
+constexpr int KP = 0.8;
+constexpr int BASIC_SPEED = 70;
 
 void setMotor(int speed, int pin1, int pin2, int pwmPin) {
   speed = constrain(speed, -255, 255);
@@ -28,16 +34,42 @@ void standBy() {
   digitalWrite(30, HIGH);
 }
 
+int getLine() {
+  static int32_t temp = 0;
+  static char buff[CHAR_BUF] = {0};
+
+  Wire.requestFrom(0x12, 2);
+  if (Wire.available() == 2) {
+
+    temp = Wire.read() | (Wire.read() << 8);
+
+    Wire.requestFrom(0x12, temp);
+    if (Wire.available() == temp) {
+      temp = 0;
+      while(Wire.available()) buff[temp++] = Wire.read();
+
+    } else {
+      while(Wire.available()) Wire.read();
+    }
+  } else {
+    while (Wire.available()) Wire.read();
+  }
+  return atoi(buff);
+}
+
 void setup() {
   for (int i = 0; i < 12; i++) {
     pinMode(MOTOR_PINS[i], OUTPUT);
   }
   standBy();
+  Serial.begin(BAUD_RATE);
+  Wire.begin();
 }
 
 void loop() {
-  // setMotor(128, MOTOR_RIGHT_A_IN1, MOTOR_RIGHT_A_IN2, MOTOR_RIGHT_A_PWM);
-  // setMotor(128, MOTOR_LEFT_A_IN1, MOTOR_LEFT_A_IN2, MOTOR_LEFT_A_PWM);
-  // setMotor(128, MOTOR_RIGHT_B_IN1, MOTOR_RIGHT_B_IN2, MOTOR_RIGHT_B_PWM);
-  // setMotor(128, MOTOR_LEFT_B_IN1, MOTOR_LEFT_B_IN2, MOTOR_LEFT_B_PWM);
+  int err = getLine();
+  Serial.println(err);
+  err *= 0.8;
+  driveFront(BASIC_SPEED - err, BASIC_SPEED + err);
+  driveBack(BASIC_SPEED - err, BASIC_SPEED + err);
 }

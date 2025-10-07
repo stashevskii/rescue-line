@@ -9,14 +9,15 @@ i2c = pyb.I2C(4, pyb.I2C.SLAVE, addr=0x12)
 i2c.deinit()  # Fully reset I2C device...
 i2c = pyb.I2C(4, pyb.I2C.SLAVE, addr=0x12)
 print("Waiting for Arduino...")
+# GRAYSCALE_THRESHOLD = [(0, 30)]
 
-GRAYSCALE_THRESHOLD = [(0, 30)]
-
+GRAYSCALE_THRESHOLD = [(0, 25)]
 ROIS = [
-    (0, 100, 160, 20, 0.7),
-    (0, 50, 160, 20, 0.3),
-    (0, 10, 160, 20, 0.3),
+    (0, 80, 160, 20, 0.7),
+    (0, 40, 160, 20, 0.3),
+    (0, 5, 160, 20, 0.3),
 ]
+
 
 # Compute the weight divisor (we're computing this so you don't have to make weights add to 1).
 weight_sum = 0
@@ -30,7 +31,8 @@ sensor.set_framesize(sensor.QQVGA)  # use QQVGA for speed.
 sensor.skip_frames(time=2000)  # Let new settings take affect.
 sensor.set_auto_gain(False)  # must be turned off for color tracking
 sensor.set_auto_whitebal(False)  # must be turned off for color tracking
-# sensor.set_vflip(True)
+sensor.set_vflip(True)
+sensor.set_windowing((25, 25, 150, 150))
 clock = time.clock()  # Tracks FPS.
 
 while True:
@@ -52,25 +54,20 @@ while True:
             img.draw_rectangle(largest_blob.rect())
             img.draw_cross(largest_blob.cx(), largest_blob.cy())
 
-            if (largest_blob.pixels() >= 400):
-                print("Cross")
-            else:
-                print("No cross")
-
             centroid_sum += largest_blob.cx() * r[4]
 
     center_pos = centroid_sum / weight_sum
-
     deflection_angle = 0
     deflection_angle = -math.atan((center_pos - 80) / 60)
-
     deflection_angle = math.degrees(deflection_angle)
-
     text = str(int(deflection_angle))
     data = struct.pack("<%ds" % len(text), text)
 
     try:
         i2c.send(struct.pack("<h", len(data)), timeout=10000)
+        i2c.send(
+            struct.pack("<h", len(data)), timeout=10000
+        )
         try:
             i2c.send(data, timeout=10000)
             print("Sent Data!")

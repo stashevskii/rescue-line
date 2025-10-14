@@ -63,13 +63,15 @@ void setup() {
   }
   standBy();
   Serial.begin(BAUD_RATE);
-  Wire.begin();
+  Serial2.begin(BAUD_RATE);
 }
 
 void loop() {
-  int err = getLine();
-  Serial.println(err);
-  err *= 0.8;
-  driveFront(BASIC_SPEED - err, BASIC_SPEED + err);
-  driveBack(BASIC_SPEED - err, BASIC_SPEED + err);
+  if (Serial2.available()) {
+    int err = Serial2.read();
+    Serial.println(err);
+  }
+  //err *= 0.8;
+  // driveFront(BASIC_SPEED - err, BASIC_SPEED + err);
+  // driveBack(BASIC_SPEED - err, BASIC_SPEED + err);
 }

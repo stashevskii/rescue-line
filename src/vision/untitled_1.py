@@ -33,30 +33,5 @@ clock = time.clock()  # Tracks FPS.
 
 while True:
     pyb.LED(2).on()
-    clock.tick()  # Track elapsed milliseconds between snapshots().
-    img = sensor.snapshot()  # Take a picture and return the image.
-
-    centroid_sum = 0
-
-    for r in ROIS:
-        blobs = img.find_blobs(
-            GRAYSCALE_THRESHOLD, roi=r[0:4], merge=True
-        )  # r[0:4] is roi tuple.
-
-        if blobs:
-            # Find the blob with the most pixels.
-            largest_blob = max(blobs, key=lambda b: b.pixels())
-
-            # Draw a rect around the blob.
-            img.draw_rectangle(largest_blob.rect())
-            img.draw_cross(largest_blob.cx(), largest_blob.cy())
-
-            centroid_sum += largest_blob.cx() * r[4]
-
-    center_pos = centroid_sum / weight_sum
-    deflection_angle = 0
-    deflection_angle = -math.atan((center_pos - 80) / 60)
-    deflection_angle = math.degrees(deflection_angle)
-    text = str(int(deflection_angle))
-
     uart.write("666\n")
+    time.sleep(1)

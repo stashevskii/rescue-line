@@ -70,6 +70,8 @@ void loop() {
   if (Serial2.available()) {
     int err = Serial2.read();
     Serial.println(err);
+  }else{
+    Serial.println("ne rabotaet");
   }
   //err *= 0.8;
   // driveFront(BASIC_SPEED - err, BASIC_SPEED + err);

@@ -34,29 +34,6 @@ void standBy() {
   digitalWrite(30, HIGH);
 }
 
-int getLine() {
-  static int32_t temp = 0;
-  static char buff[CHAR_BUF] = {0};
-
-  Wire.requestFrom(0x12, 2);
-  if (Wire.available() == 2) {
-
-    temp = Wire.read() | (Wire.read() << 8);
-
-    Wire.requestFrom(0x12, temp);
-    if (Wire.available() == temp) {
-      temp = 0;
-      while(Wire.available()) buff[temp++] = Wire.read();
-
-    } else {
-      while(Wire.available()) Wire.read();
-    }
-  } else {
-    while (Wire.available()) Wire.read();
-  }
-  return atoi(buff);
-}
-
 void setup() {
   for (int i = 0; i < 12; i++) {
     pinMode(MOTOR_PINS[i], OUTPUT);
@@ -68,12 +45,9 @@ void setup() {
 
 void loop() {
   if (Serial2.available()) {
-    int err = Serial2.read();
-    Serial.println(err);
-  }else{
-    Serial.println("ne rabotaet");
+    String buff = Serial2.readStringUntil('\n');
+    int err = buff.toInt();
+    driveFront(BASIC_SPEED - err, BASIC_SPEED + err);
+    driveBack(BASIC_SPEED - err, BASIC_SPEED + err);
   }
-  //err *= 0.8;
-  // driveFront(BASIC_SPEED - err, BASIC_SPEED + err);
-  // driveBack(BASIC_SPEED - err, BASIC_SPEED + err);
 }

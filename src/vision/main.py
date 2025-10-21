@@ -28,16 +28,19 @@ sensor.skip_frames(time=2000)  # Let new settings take affect.
 sensor.set_auto_gain(False)  # must be turned off for color tracking
 sensor.set_auto_whitebal(False)  # must be turned off for color tracking
 sensor.set_vflip(True)
-sensor.set_windowing((25, 25, 150, 150))
+# sensor.set_windowing((25, 25, 150, 150))
+green_threshold = (0, 100, -128, -10, -128, 127)
 clock = time.clock()  # Tracks FPS.
 
 while True:
-    pyb.LED(2).on()
+    pyb.LED(3).on()
     clock.tick()  # Track elapsed milliseconds between snapshots().
     img = sensor.snapshot()  # Take a picture and return the image.
 
     centroid_sum = 0
-
+    lineBlobX = 0
+    isCross = 0
+    i = 0
     for r in ROIS:
         blobs = img.find_blobs(
             GRAYSCALE_THRESHOLD, roi=r[0:4], merge=True
@@ -46,7 +49,13 @@ while True:
         if blobs:
             # Find the blob with the most pixels.
             largest_blob = max(blobs, key=lambda b: b.pixels())
-
+            if i == 0:
+                lineBlobX = largest_blob.cx()
+            i+=1
+            if (largest_blob.pixels() >= 400):
+                isCross = 1
+            else:
+                isCross = 0
             # Draw a rect around the blob.
             img.draw_rectangle(largest_blob.rect())
             img.draw_cross(largest_blob.cx(), largest_blob.cy())
@@ -58,5 +67,22 @@ while True:
     deflection_angle = -math.atan((center_pos - 80) / 60)
     deflection_angle = math.degrees(deflection_angle)
     text = str(int(deflection_angle))
+    # Находим ВСЕ зеленые пиксели
+    green_blobs = img.find_blobs([green_threshold],
+    area_threshold=60,  # Минимальная площадь = 1 пиксель
+    pixels_threshold=40,
+    merge=True,       # Не сливать области
+    margin=1)          # Минимальный отступ
+    greenBlobsPos = 0
+    for blob in green_blobs:
+        if blob.y()>40:
+            if blob.x()<lineBlobX:
+                greenBlobsPos += 1
+            if blob.x()>lineBlobX:
+                greenBlobsPos += 2
+    greenBlobsText = str(int(greenBlobsPos))
 
-    uart.write("666\n")
+    uart.write("e" + text + "\n")
+    if isCross == 0:
+        uart.write("c" + greenBlobsText + "\n")
+

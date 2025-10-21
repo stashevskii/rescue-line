@@ -3,7 +3,7 @@
 
 constexpr int BAUD_RATE = 19200;
 constexpr int CHAR_BUF = 128;
-constexpr int KP = 0.8;
+constexpr int KP = 1;
 constexpr int BASIC_SPEED = 70;
 
 void setMotor(int speed, int pin1, int pin2, int pwmPin) {
@@ -46,7 +46,10 @@ void setup() {
 void loop() {
   if (Serial2.available()) {
     String buff = Serial2.readStringUntil('\n');
+    String type = buff.substring(0, 1);
+    buff = buff.substring(1);
     int err = buff.toInt();
+    Serial.println(blobPos);
     driveFront(BASIC_SPEED - err, BASIC_SPEED + err);
     driveBack(BASIC_SPEED - err, BASIC_SPEED + err);
   }

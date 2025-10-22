@@ -3,8 +3,11 @@
 
 constexpr int BAUD_RATE = 19200;
 constexpr int CHAR_BUF = 128;
-constexpr int KP = 1;
+constexpr int KP = 30;
 constexpr int BASIC_SPEED = 70;
+int err;
+int blobPos;
+int isCross;
 
 void setMotor(int speed, int pin1, int pin2, int pwmPin) {
   speed = constrain(speed, -255, 255);
@@ -48,9 +51,31 @@ void loop() {
     String buff = Serial2.readStringUntil('\n');
     String type = buff.substring(0, 1);
     buff = buff.substring(1);
-    int err = buff.toInt();
-    Serial.println(blobPos);
-    driveFront(BASIC_SPEED - err, BASIC_SPEED + err);
-    driveBack(BASIC_SPEED - err, BASIC_SPEED + err);
+    int value = buff.toInt();
+    err = err*KP;
+    if(type == "e"){
+        err = value;
+        // Serial.print("err");
+        // Serial.println(err);
+    }
+    if(type == "c"){
+        isCross = 1;
+        blobPos = value;
+        // Serial.print("cross");
+        // Serial.println(blobPos);
+    }else{
+      isCross = 0;
+    }
+    if(isCross == 0){
+      driveFront(BASIC_SPEED + err, BASIC_SPEED - err);
+      driveBack(BASIC_SPEED + err, BASIC_SPEED - err);
+    }
+    // Serial.print("err+speed");
+    // Serial.println(BASIC_SPEED + err);
+    // Serial.print("err-speed");
+    // Serial.println(BASIC_SPEED - err);
+    // Serial.print("err");
+    // Serial.println(err);
+    // delay(300);
   }
 }

@@ -28,6 +28,8 @@ sensor.skip_frames(time=2000)  # Let new settings take affect.
 sensor.set_auto_gain(False)  # must be turned off for color tracking
 sensor.set_auto_whitebal(False)  # must be turned off for color tracking
 sensor.set_vflip(True)
+sensor.set_hmirror(True)  # Горизонтальное зеркальное отображение
+
 # sensor.set_windowing((25, 25, 150, 150))
 green_threshold = (0, 100, -128, -10, -128, 127)
 clock = time.clock()  # Tracks FPS.
@@ -45,22 +47,23 @@ while True:
         blobs = img.find_blobs(
             GRAYSCALE_THRESHOLD, roi=r[0:4], merge=True
         )  # r[0:4] is roi tuple.
-
         if blobs:
             # Find the blob with the most pixels.
             largest_blob = max(blobs, key=lambda b: b.pixels())
-            if i == 0:
+            if(i==1):
                 lineBlobX = largest_blob.cx()
-            i+=1
-            if (largest_blob.pixels() >= 400):
-                isCross = 1
-            else:
-                isCross = 0
+                if (largest_blob.pixels() >= 600):
+                    print("Cross")
+                    isCross = 1
+                else:
+                    print("No Cross")
+                    isCross = 0
+                print(largest_blob.pixels())
             # Draw a rect around the blob.
             img.draw_rectangle(largest_blob.rect())
             img.draw_cross(largest_blob.cx(), largest_blob.cy())
-
             centroid_sum += largest_blob.cx() * r[4]
+        i+=1
 
     center_pos = centroid_sum / weight_sum
     deflection_angle = 0
@@ -83,6 +86,6 @@ while True:
     greenBlobsText = str(int(greenBlobsPos))
 
     uart.write("e" + text + "\n")
-    if isCross == 0:
+    if isCross == 1:
         uart.write("c" + greenBlobsText + "\n")
 

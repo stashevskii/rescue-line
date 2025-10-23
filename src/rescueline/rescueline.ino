@@ -3,9 +3,9 @@
 
 constexpr int BAUD_RATE = 19200;
 constexpr int CHAR_BUF = 128;
-constexpr int KP = 30;
+constexpr double KP = 4.0;
 constexpr int BASIC_SPEED = 70;
-int err;
+double err;
 int blobPos;
 int isCross;
 
@@ -49,33 +49,14 @@ void setup() {
 void loop() {
   if (Serial2.available()) {
     String buff = Serial2.readStringUntil('\n');
-    String type = buff.substring(0, 1);
-    buff = buff.substring(1);
-    int value = buff.toInt();
-    err = err*KP;
-    if(type == "e"){
-        err = value;
-        // Serial.print("err");
-        // Serial.println(err);
-    }
-    if(type == "c"){
-        isCross = 1;
-        blobPos = value;
-        // Serial.print("cross");
-        // Serial.println(blobPos);
-    }else{
-      isCross = 0;
-    }
-    if(isCross == 0){
-      driveFront(BASIC_SPEED + err, BASIC_SPEED - err);
-      driveBack(BASIC_SPEED + err, BASIC_SPEED - err);
-    }
-    // Serial.print("err+speed");
-    // Serial.println(BASIC_SPEED + err);
-    // Serial.print("err-speed");
-    // Serial.println(BASIC_SPEED - err);
-    // Serial.print("err");
-    // Serial.println(err);
-    // delay(300);
+    err = buff.toDouble() * KP;
+    driveFront(BASIC_SPEED + err, BASIC_SPEED - err);
+    driveBack(BASIC_SPEED + err, BASIC_SPEED - err);
+    Serial.print("err+speed");
+    Serial.println(BASIC_SPEED + err);
+    Serial.print("err-speed");
+    Serial.println(BASIC_SPEED - err);
+    Serial.print("err");
+    Serial.println(err);
   }
 }

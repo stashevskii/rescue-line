@@ -3,8 +3,8 @@
 
 constexpr int BAUD_RATE = 19200;
 constexpr int CHAR_BUF = 128;
-constexpr double KP = 4.0;
-constexpr int BASIC_SPEED = 70;
+constexpr double KP = 3;
+constexpr int BASIC_SPEED = 50;
 double err;
 int blobPos;
 int isCross;
@@ -52,10 +52,10 @@ void loop() {
     err = buff.toDouble() * KP;
     driveFront(BASIC_SPEED + err, BASIC_SPEED - err);
     driveBack(BASIC_SPEED + err, BASIC_SPEED - err);
-    Serial.print("err+speed");
-    Serial.println(BASIC_SPEED + err);
-    Serial.print("err-speed");
-    Serial.println(BASIC_SPEED - err);
+    // Serial.print("err+speed");
+    // Serial.println(BASIC_SPEED + err);
+    // Serial.print("err-speed");
+    // Serial.println(BASIC_SPEED - err);
     Serial.print("err");
     Serial.println(err);
   }

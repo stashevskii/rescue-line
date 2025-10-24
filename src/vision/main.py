@@ -35,6 +35,8 @@ green_threshold = (0, 100, -128, -10, -128, 127)
 clock = time.clock()  # Tracks FPS.
 
 while True:
+    pyb.LED(1).on()
+    pyb.LED(2).on()
     pyb.LED(3).on()
     clock.tick()  # Track elapsed milliseconds between snapshots().
     img = sensor.snapshot()  # Take a picture and return the image.
@@ -53,12 +55,9 @@ while True:
             if(i==1):
                 lineBlobX = largest_blob.cx()
                 if (largest_blob.pixels() >= 600):
-                    print("Cross")
                     isCross = 1
                 else:
-                    print("No Cross")
                     isCross = 0
-                print(largest_blob.pixels())
             # Draw a rect around the blob.
             img.draw_rectangle(largest_blob.rect())
             img.draw_cross(largest_blob.cx(), largest_blob.cy())
@@ -70,6 +69,7 @@ while True:
     deflection_angle = -math.atan((center_pos - 80) / 60)
     deflection_angle = math.degrees(deflection_angle)
     text = str(int(deflection_angle))
+    print(text)
     # Находим ВСЕ зеленые пиксели
     green_blobs = img.find_blobs([green_threshold],
     area_threshold=60,  # Минимальная площадь = 1 пиксель
@@ -85,7 +85,7 @@ while True:
                 greenBlobsPos += 2
     greenBlobsText = str(int(greenBlobsPos))
 
-    uart.write("e" + text + "\n")
-    if isCross == 1:
-        uart.write("c" + greenBlobsText + "\n")
+    uart.write(text + "\n")
+    #if isCross == 1:
+        #uart.write("c" + greenBlobsText + "\n")
 

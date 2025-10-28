@@ -4,7 +4,11 @@
 constexpr int BAUD_RATE = 19200;
 constexpr int CHAR_BUF = 128;
 constexpr double KP = 3;
-constexpr int BASIC_SPEED = 50;
+constexpr int BASIC_SPEED = 45;
+constexpr int N = 4;
+constexpr int w[N] = {1000, 2000, 3000, 4000};
+constexpr int linePins[N] = {A14, A12, A10, A8};
+int lineValues[N];
 double err;
 int blobPos;
 int isCross;
@@ -32,6 +36,37 @@ void driveBack(int rightSpeed, int leftSpeed) {
   setMotor(leftSpeed, MOTOR_LEFT_B_IN1, MOTOR_LEFT_B_IN2, MOTOR_LEFT_B_PWM);
 }
 
+void readSensors() {
+  for (int i = 0; i < N; ++i) {
+    lineValues[i] = analogRead(linePins[i]);
+  }
+}
+
+void printSensors() {
+  readSensors();
+  for (int i = 0; i < N; ++i) {
+    Serial.print(i);
+    Serial.print(" - ");
+    Serial.print(lineValues[i]);
+    Serial.print(" ");
+  }
+  Serial.println();
+}
+
+double getNormalized() {
+  int s = 0, s2 = 0;
+  readSensors();
+  for (int i = 0; i < N; ++i) {
+    s += lineValues[i];
+    s2 += lineValues[i] * w[i];
+  }
+  return (double)s2 / s;
+}
+
+double getError() {
+  return 2500.0 - getNormalized();
+}
+
 void standBy() {
   pinMode(30, OUTPUT);
   digitalWrite(30, HIGH);
@@ -47,16 +82,9 @@ void setup() {
 }
 
 void loop() {
-  if (Serial2.available()) {
-    String buff = Serial2.readStringUntil('\n');
-    err = buff.toDouble() * KP;
-    driveFront(BASIC_SPEED + err, BASIC_SPEED - err);
-    driveBack(BASIC_SPEED + err, BASIC_SPEED - err);
-    // Serial.print("err+speed");
-    // Serial.println(BASIC_SPEED + err);
-    // Serial.print("err-speed");
-    // Serial.println(BASIC_SPEED - err);
-    Serial.print("err");
-    Serial.println(err);
-  }
+  printSensors();
+  double err = getError();
+  err *= KP;
+  /*driveFront(BASIC_SPEED + err, BASIC_SPEED - err);
+  driveBack(BASIC_SPEED + err, BASIC_SPEED - err);*/
 }

@@ -29,7 +29,7 @@ constexpr int MOTOR_PINS[] = {
   MOTOR_RIGHT_B_IN1,
   MOTOR_RIGHT_B_IN2,
   MOTOR_RIGHT_B_PWM,
-  
+
   // Motor Left A
   MOTOR_LEFT_A_IN1,
   MOTOR_LEFT_A_IN2,

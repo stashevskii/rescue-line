@@ -7,7 +7,7 @@ constexpr double KP = 3;
 constexpr int BASIC_SPEED = 45;
 constexpr int N = 4;
 constexpr int w[N] = {1000, 2000, 3000, 4000};
-constexpr int linePins[N] = {A14, A12, A10, A8};
+constexpr int linePins[N] = {A14, A6, A4, A8};
 int lineValues[N];
 double err;
 int blobPos;
@@ -85,6 +85,7 @@ void loop() {
   printSensors();
   double err = getError();
   err *= KP;
+  delay(400);
   /*driveFront(BASIC_SPEED + err, BASIC_SPEED - err);
   driveBack(BASIC_SPEED + err, BASIC_SPEED - err);*/
 }

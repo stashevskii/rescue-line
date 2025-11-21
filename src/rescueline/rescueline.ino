@@ -1,15 +1,15 @@
 #include "config.hpp"
-#include <Wire.h>
+#include <EEPROM.h>
 
 constexpr int BAUD_RATE = 19200;
 constexpr int CHAR_BUF = 128;
-constexpr double KP = 0.1;
+constexpr double KP = 0.08;
 constexpr double KD = 0.8;
 constexpr int BASIC_SPEED = 100;
 constexpr int N = 4;
 constexpr int w[N] = {1000, 2000, 3000, 4000};
 constexpr int linePins[N] = {A14, A8, A6, A4};
-int lineValues[N];
+int lineValues[N], maxS[N], minS[N];
 double err;
 int blobPos;
 int isCross;
@@ -45,7 +45,40 @@ void readSensors() {
   for (int i = 0; i < N; ++i) {
     lineValues[i] = (lineValues[i] + analogRead(linePins[i]))/2;
   }
-} 
+}
+
+void calibrate() {
+  int maxS[N], minS[N];
+  unsigned long tmr = millis();
+  while (millis() <= tmr + 5000) {
+    readSensors();
+    for (int i = 0; i < N; ++i)
+      maxS[i] = max(maxS[i], lineValues[i]);
+    for (int i = 0; i < N; ++i)
+      minS[i] = max(minS[i], lineValues[i]);
+  }
+  int adr = 0;
+  EEPROM.put(adr, maxS);
+  adr += sizeof(maxS);
+  EEPROM.put(adr, minS);
+}
+
+void readSensorsCalib() {
+  int a[N], b[N];
+  int adr = 0;
+  EEPROM.put(adr, a);
+  adr += sizeof(a);
+  EEPROM.put(adr, b);
+  for (int i = 0; i < N; ++i) {
+    lineValues[i] = analogRead(linePins[i]);
+  }
+  for (int i = 0; i < N; ++i) {
+    lineValues[i] = (lineValues[i] + analogRead(linePins[i]))/2;
+  }
+  for (int i = 0; i < N; ++i) {
+    lineValues[i] = map(lineValues[i], 0, 1000, a[i], b[i]);
+  }
+}
 
 void printSensors() {
   readSensors();
@@ -81,17 +114,16 @@ int readLine() {
   return lastPos;
 }
 
-
 void LFR(){
   int lastError = 0;
   while(true){
-  int err = 2500 - readLine();
-  int delta =(err*KP) + (err - lastError)*KD;
-  lastError = err;
-  // printSensors();
-  Serial.println(delta);
-  driveFront(BASIC_SPEED - delta, BASIC_SPEED + delta);
-  driveBack(BASIC_SPEED - delta, BASIC_SPEED + delta);
+    int err = 2500 - readLine();
+    int delta =(err*KP) + (err - lastError) * KD;
+    lastError = err;
+    // printSensors();
+    Serial.println(delta);
+    driveFront(BASIC_SPEED - delta, BASIC_SPEED + delta);
+    driveBack(BASIC_SPEED - delta, BASIC_SPEED + delta);
   }
 }
 

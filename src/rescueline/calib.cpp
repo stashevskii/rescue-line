@@ -1,6 +1,7 @@
-#include "calib.hpp"
 #include <Arduino.h>
 #include <EEPROM.h>
+#include "calib.hpp"
+#include "lfr.hpp"
 
 void calibrate() {
   int maxS[N], minS[N];
@@ -27,7 +28,7 @@ void calibrate() {
   }
 }
 
-void readCalibValues(int* mx, int* mn) {
+void fetchCalib(int* mx, int* mn) {
   int adr = 0;
   for (int i = 0; i < N; i++) {
     EEPROM.get(adr, mx[i]);

@@ -26,3 +26,15 @@ void calibrate() {
     adr += sizeof(int);
   }
 }
+
+void readCalibValues(int* mx, int* mn) {
+  int adr = 0;
+  for (int i = 0; i < N; i++) {
+    EEPROM.get(adr, mx[i]);
+    adr += sizeof(int);
+  }
+  for (int i = 0; i < N; i++) {
+    EEPROM.get(adr, mn[i]);
+    adr += sizeof(int);
+  }
+}

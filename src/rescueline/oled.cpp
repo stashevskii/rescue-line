@@ -9,3 +9,11 @@ void initOLED() {
   u8x8.setFont(u8x8_font_chroma48medium8_r);
   u8x8.setInverseFont(0);
 }
+
+void printArray(int* arr, int size, int len, int m, int k) {
+  for (int i = 0; i < size; ++i) {
+    char bf[len];
+    itoa(arr[i], bf, len);
+    u8x8.drawString(m, i + k, bf);
+  }
+}

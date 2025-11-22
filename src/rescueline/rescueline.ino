@@ -126,6 +126,7 @@ void setup() {
   standBy();
   Serial.begin(BAUD_RATE);
   Serial2.begin(BAUD_RATE);
+  pinMode(BTN_SET, INPUT_PULLUP);
   initOLED();
 }
 
@@ -137,11 +138,15 @@ void testDrive(){
 }
 
 void loop() {
-  u8x8.drawString(0, 1, "minS:");
-  for (int i = 0; i < N; ++i) {
-    char bf[10];
-    itoa(minS[i], bf, 10);
-    u8x8.drawString(0, 4 * (i + 1), bf);
-    u8x8.refreshDisplay();
+  if (!digitalRead(BTN_SET)) {
+    u8x8.clear();
+    calibrate();
+    int maxS[N], minS[N];
+    readCalibValues(maxS, minS);
+    u8x8.drawString(0, 1, "min");
+    printArray(minS, N, 10, 0, 10);
+    u8x8.drawString(8, 1, "max");
+    printArray(maxS, N, 10, 8, 10);
+    delay(10000);
   }
 }

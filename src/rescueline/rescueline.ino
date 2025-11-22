@@ -1,5 +1,8 @@
-#include "config.hpp"
 #include <EEPROM.h>
+#include <U8x8lib.h>
+#include "config.hpp"
+#include "oled.hpp"
+#include "calib.hpp"
 
 constexpr int BAUD_RATE = 19200;
 constexpr int CHAR_BUF = 128;
@@ -47,28 +50,12 @@ void readSensors() {
   }
 }
 
-void calibrate() {
-  int maxS[N], minS[N];
-  unsigned long tmr = millis();
-  while (millis() <= tmr + 5000) {
-    readSensors();
-    for (int i = 0; i < N; ++i)
-      maxS[i] = max(maxS[i], lineValues[i]);
-    for (int i = 0; i < N; ++i)
-      minS[i] = max(minS[i], lineValues[i]);
-  }
-  int adr = 0;
-  EEPROM.put(adr, maxS);
-  adr += sizeof(maxS);
-  EEPROM.put(adr, minS);
-}
-
 void readSensorsCalib() {
   int a[N], b[N];
   int adr = 0;
-  EEPROM.put(adr, a);
+  EEPROM.get(adr, a);
   adr += sizeof(a);
-  EEPROM.put(adr, b);
+  EEPROM.get(adr, b);
   for (int i = 0; i < N; ++i) {
     lineValues[i] = analogRead(linePins[i]);
   }
@@ -139,6 +126,7 @@ void setup() {
   standBy();
   Serial.begin(BAUD_RATE);
   Serial2.begin(BAUD_RATE);
+  initOLED();
 }
 
 void testDrive(){
@@ -149,6 +137,11 @@ void testDrive(){
 }
 
 void loop() {
-  LFR();
-  // testDrive();
+  u8x8.drawString(0, 1, "minS:");
+  for (int i = 0; i < N; ++i) {
+    char bf[10];
+    itoa(minS[i], bf, 10);
+    u8x8.drawString(0, 4 * (i + 1), bf);
+    u8x8.refreshDisplay();
+  }
 }

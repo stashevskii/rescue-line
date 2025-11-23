@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include <EEPROM.h>
 #include <U8x8lib.h>
 #include "move.hpp"

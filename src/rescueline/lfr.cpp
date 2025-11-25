@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "lfr.hpp"
 #include "move.hpp"
+#include "calib.hpp"
 
 const int N = 4;
 static constexpr double KP = 0.08;
@@ -29,14 +30,17 @@ void printSensors() {
 }
 
 int readLine() {
+  int maxS[N], minS[N];
+  fetchCalib(maxS, minS);
   int sumAll = 0;
   long sumW = 0;
   bool flag = false;
   readSensors();
   for (int i = 0; i < N; ++i) {
-    if (lineValues[i] > 150){
-      sumAll += lineValues[i];
-      sumW += lineValues[i] * (long)w[i];
+    int sensNormalized = map(constrain(lineValues[i], minS[i], maxS[i]), minS[i], maxS[i], 0, 1000);
+    if (sensNormalized > 150){
+      sumAll += sensNormalized;
+      sumW += sensNormalized * (long)w[i];
       flag = true;
     }
   }

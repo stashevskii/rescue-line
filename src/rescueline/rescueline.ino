@@ -12,9 +12,12 @@ void setup() {
     pinMode(MOTOR_PINS[i], OUTPUT);
   }
   pinMode(30, OUTPUT);
+  pinMode(LED1, OUTPUT);
+  pinMode(LED2, OUTPUT);
   digitalWrite(30, HIGH);
   Serial.begin(BAUD_RATE);
   pinMode(BTN_SET, INPUT_PULLUP);
+  pinMode(BTN_PLUS, INPUT_PULLUP);
   initOLED();
 }
 
@@ -35,6 +38,11 @@ void loop() {
     printArray(minS, N, 10, 0, 10);
     u8x8.drawString(8, 1, "max");
     printArray(maxS, N, 10, 8, 10);
-    delay(10000);
+    delay(5000);
+  }
+  if (!digitalRead(BTN_PLUS)) {
+    digitalWrite(LED3, HIGH);
+    LFR(100);
+    digitalWrite(LED3, HIGH);
   }
 }

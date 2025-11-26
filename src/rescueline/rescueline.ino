@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include <EEPROM.h>
-#include <U8x8lib.h>
+#include <U8g2lib.h>
 #include "move.hpp"
 #include "config.hpp"
 #include "oled.hpp"
@@ -19,6 +19,15 @@ void setup() {
   pinMode(BTN_SET, INPUT_PULLUP);
   pinMode(BTN_PLUS, INPUT_PULLUP);
   initOLED();
+  int adr = 0;
+  for (int i = 0; i < N; i++) {
+    EEPROM.get(adr, calibMax[i]);
+    adr += sizeof(int);
+  }
+  for (int i = 0; i < N; i++) {
+    EEPROM.get(adr, calibMin[i]);
+    adr += sizeof(int);
+  }
 }
 
 void testDrive() {
@@ -30,19 +39,18 @@ void testDrive() {
 
 void loop() {
   if (!digitalRead(BTN_SET)) {
-    u8x8.clear();
+    u8g2.clear();
     calibrate();
-    int maxS[N], minS[N];
-    fetchCalib(maxS, minS);
-    u8x8.drawString(0, 1, "min");
-    printArray(minS, N, 10, 0, 10);
-    u8x8.drawString(8, 1, "max");
-    printArray(maxS, N, 10, 8, 10);
-    delay(5000);
+    u8g2.drawStr(0, 1, "min");
+    printArray(calibMin, N, 10, 0, 10);
+    u8g2.drawStr(8, 1, "max");
+    printArray(calibMax, N, 10, 8, 10);
+    u8g2.sendBuffer();
+    delay(6000);
   }
   if (!digitalRead(BTN_PLUS)) {
     digitalWrite(LED3, HIGH);
-    LFR(100);
+    LFR(170);
     digitalWrite(LED3, HIGH);
   }
 }

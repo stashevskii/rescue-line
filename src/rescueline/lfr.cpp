@@ -4,7 +4,7 @@
 #include "calib.hpp"
 
 const int N = 4;
-static constexpr double KP = 0.08;
+static constexpr double KP = 0.1;
 static constexpr double KD = 0.8;
 static constexpr int w[N] = {1000, 2000, 3000, 4000};
 static constexpr int linePins[N] = {A14, A8, A6, A4};
@@ -30,17 +30,15 @@ void printSensors() {
 }
 
 int readLine() {
-  int maxS[N], minS[N];
-  fetchCalib(maxS, minS);
   int sumAll = 0;
   long sumW = 0;
   bool flag = false;
   readSensors();
   for (int i = 0; i < N; ++i) {
-    int sensNormalized = map(constrain(lineValues[i], minS[i], maxS[i]), minS[i], maxS[i], 0, 1000);
-    if (sensNormalized > 150){
-      sumAll += sensNormalized;
-      sumW += sensNormalized * (long)w[i];
+    int normolized = map(constrain(lineValues[i], calibMin[i], calibMax[i]), calibMin[i], calibMax[i], 0, 1000);
+    if (normolized > 250) {
+      sumAll += normolized;
+      sumW += normolized * (long)w[i];
       flag = true;
     }
   }

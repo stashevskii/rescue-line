@@ -30,27 +30,37 @@ void setup() {
   }
 }
 
-void testDrive() {
-  while (true) {
-    driveFront(0, 100);
-    driveBack(0, 100);
-  }
+void run() {
+  digitalWrite(LED3, HIGH);
+  LFR(150);
+  digitalWrite(LED3, LOW);
 }
 
-void loop() {
-  if (!digitalRead(BTN_SET)) {
-    u8g2.clear();
-    calibrate();
-    u8g2.drawStr(0, 1, "min");
-    printArray(calibMin, N, 10, 0, 10);
-    u8g2.drawStr(8, 1, "max");
-    printArray(calibMax, N, 10, 8, 10);
-    u8g2.sendBuffer();
-    delay(6000);
-  }
-  if (!digitalRead(BTN_PLUS)) {
-    digitalWrite(LED3, HIGH);
-    LFR(170);
-    digitalWrite(LED3, HIGH);
-  }
+void calib() {
+  u8g2.clear();
+  u8g2.drawStr(25, 25, "calibration");
+  calibrate();
+  u8g2.clear();
+  u8g2.drawStr(10, 10, "min:");
+  printArray(calibMin, N, 10, 10);
+  u8g2.drawStr(70, 10, "max:");
+  printArray(calibMax, N, 70, 10);
+  u8g2.sendBuffer();
+  while (digitalRead(BTN_SET));
+  delay(300);
+}
+
+const char *string_list = 
+  "Calibration\n"
+  "Run";
+
+void loop(void) {
+  static uint8_t current_selection;
+  current_selection = u8g2.userInterfaceSelectionList(
+    "Menu",
+    current_selection, 
+    string_list
+  );
+  if (current_selection == 1) calib();
+  else if (current_selection == 2) run();
 }

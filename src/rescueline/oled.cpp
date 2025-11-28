@@ -8,10 +8,10 @@ void initOLED() {
   u8g2.setFont(u8g2_font_6x12_tr);
 }
 
-void printArray(int* arr, int size, int len, int m, int k) {
+void printArray(int* arr, int size, int x, int y, int len = 10) {
   for (int i = 0; i < size; ++i) {
     char bf[len];
     itoa(arr[i], bf, len);
-    u8g2.drawStr(m, i + k, bf);
+    u8g2.drawStr(x, i * y + 20, bf);
   }
 }

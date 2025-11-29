@@ -1,6 +1,5 @@
 #pragma once
 
-extern const int N;
 extern int lineValues[];
 
 void readSensors();

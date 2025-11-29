@@ -1,7 +1,7 @@
 #pragma once
 
-extern int calibMax[4], calibMin[4];
-extern long tcsMin[3], tcsMax[3];
+extern int lineCalibMax[4], lineCalibMin[4];
+extern uint16_t tcsCalibMin[3], tcsCalibMax[3];
 
-void calibrate();
-void calibrateCS();
+void calibrateLine();
+void calibrateTcs();

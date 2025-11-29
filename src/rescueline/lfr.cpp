@@ -3,24 +3,23 @@
 #include "move.hpp"
 #include "calib.hpp"
 
-const int N = 4;
 static constexpr double KP = 0.1;
 static constexpr double KD = 0.8;
-static constexpr int w[N] = {1000, 2000, 3000, 4000};
-static constexpr int linePins[N] = {A14, A8, A6, A4};
+static constexpr int w[4] = {1000, 2000, 3000, 4000};
+static constexpr int linePins[4] = {A14, A8, A6, A4};
 static int lastPos = 2500;
-int lineValues[N];
+int lineValues[4];
 
 void readSensors() {
-  for (int i = 0; i < N; ++i)
+  for (int i = 0; i <4; ++i)
     lineValues[i] = analogRead(linePins[i]);
-  for (int i = 0; i < N; ++i)
+  for (int i = 0; i <4; ++i)
     lineValues[i] = (lineValues[i] + analogRead(linePins[i])) / 2;
 }
 
 void printSensors() {
   readSensors();
-  for (int i = 0; i < N; ++i) {
+  for (int i = 0; i <4; ++i) {
     Serial.print(i);
     Serial.print(" - ");
     Serial.print(lineValues[i]);
@@ -34,8 +33,8 @@ int readLine() {
   long sumW = 0;
   bool flag = false;
   readSensors();
-  for (int i = 0; i < N; ++i) {
-    int normolized = map(constrain(lineValues[i], calibMin[i], calibMax[i]), calibMin[i], calibMax[i], 0, 1000);
+  for (int i = 0; i < 4; ++i) {
+    int normolized = map(constrain(lineValues[i], lineCalibMin[i], lineCalibMax[i]), lineCalibMin[i], lineCalibMax[i], 0, 1000);
     if (normolized > 250) {
       sumAll += normolized;
       sumW += normolized * (long)w[i];

@@ -9,62 +9,59 @@
 static constexpr int calibSpeed = 90;
 static constexpr int calibTime = 11000;
 
-int calibMax[4], calibMin[4];
-long tcsMin[3], tcsMax[3];
+int lineCalibMax[4], lineCalibMin[4];
+uint16_t tcsCalibMin[3], tcsCalibMax[3];
 
-void calibrate() {
-  for (int i = 0; i < N; ++i) {
-    calibMin[i] = 1000;
-    calibMax[i] = 0;
-  }
-  unsigned long tmr = millis();
-  while (millis() <= tmr + calibTime) {
-    driveFront(-calibSpeed, calibSpeed);
-    driveBack(-calibSpeed, calibSpeed);
-    readSensors();
-    for (int i = 0; i < N; ++i) {
-      calibMax[i] = max(calibMax[i], lineValues[i]);
-      calibMin[i] = min(calibMin[i], lineValues[i]);
-    }
-  }
-  driveFront(0, 0);
-  driveBack(0, 0);
-  int adr = 0;
-  for (int i = 0; i < N; i++) {
-    EEPROM.put(adr, calibMax[i]);
+static void drv(int s = calibSpeed) {
+  driveFront(-s, s);
+  driveBack(-s, s);
+}
+
+template<typename T>
+static void putEeprom(int adr, T* mx, T* mn, int size) {
+  for (int i = 0; i < size; i++) {
+    EEPROM.put(adr, mx[i]);
     adr += sizeof(int);
   }
-  for (int i = 0; i < N; i++) {
-    EEPROM.put(adr, calibMin[i]);
+  for (int i = 0; i < size; i++) {
+    EEPROM.put(adr, mn[i]);
     adr += sizeof(int);
   }
 }
 
-void calibrateCS() {
+void calibrateLine() {
+  for (int i = 0; i < 4; ++i) {
+    lineCalibMin[i] = 1000;
+    lineCalibMax[i] = 0;
+  }
+  unsigned long tmr = millis();
+  while (millis() <= tmr + calibTime) {
+    drv();
+    readSensors();
+    for (int i = 0; i < 4; ++i) {
+      lineCalibMax[i] = max(lineCalibMax[i], lineValues[i]);
+      lineCalibMin[i] = min(lineCalibMin[i], lineValues[i]);
+    }
+  }
+  drv(0);
+  putEeprom(0, lineCalibMax, lineCalibMin, 4);
+}
+
+void calibrateTcs() {
   for (int i = 0; i < 3; ++i) {
-    tcsMin[i] = 100000;
-    tcsMax[i] = 0;
+    tcsCalibMin[i] = 65535;
+    tcsCalibMax[i] = 0;
   }
   unsigned long tmr = millis();
   uint16_t arr[3];
   while (millis() <= tmr + calibTime) {
-    driveFront(-45, 45);
-    driveBack(-45, 45);
+    drv();
     getRawRGB(&arr[0], &arr[1], &arr[2]);
     for (int i = 0; i < 3; ++i) {
-      tcsMax[i] = max(tcsMax[i], arr[i]);
-      tcsMin[i] = min(tcsMin[i], arr[i]);
+      tcsCalibMax[i] = max(tcsCalibMax[i], arr[i]);
+      tcsCalibMin[i] = min(tcsCalibMin[i], arr[i]);
     }
   }
-  driveFront(0, 0);
-  driveBack(0, 0);
-  /*int adr = 0;
-  for (int i = 0; i < N; i++) {
-    EEPROM.put(adr, calibMax[i]);
-    adr += sizeof(int);
-  }
-  for (int i = 0; i < N; i++) {
-    EEPROM.put(adr, calibMin[i]);
-    adr += sizeof(int);
-  }*/
+  drv(0);
+  putEeprom(8 * sizeof(int), tcsCalibMax, tcsCalibMin, 3);
 }

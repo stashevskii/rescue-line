@@ -18,7 +18,11 @@ constexpr int MOTOR_LEFT_B_IN1 = 13;
 constexpr int MOTOR_LEFT_B_IN2 = 5;
 constexpr int MOTOR_LEFT_B_PWM = 7;
 
-constexpr int MOTOR_PINS[] = {
+constexpr int LED1 = 34;
+constexpr int LED2 = 36;
+constexpr int LED3 = 38;
+
+constexpr int OUTPUT_MODE[] = {
   MOTOR_RIGHT_A_IN1,
   MOTOR_RIGHT_A_IN2,
   MOTOR_RIGHT_A_PWM,
@@ -33,13 +37,16 @@ constexpr int MOTOR_PINS[] = {
 
   MOTOR_LEFT_B_IN1,
   MOTOR_LEFT_B_IN2,
-  MOTOR_LEFT_B_PWM 
-};
+  MOTOR_LEFT_B_PWM,
 
-constexpr int LED1 = 34;
-constexpr int LED2 = 36;
-constexpr int LED3 = 38;
+  LED1,
+  LED2,
+  LED3,
+  30
+};
 
 constexpr int BTN_SET = 12;
 constexpr int BTN_PLUS = 15;
 constexpr int BTN_MINUS = 14;
+
+constexpr int BUTTONS[] = {BTN_SET, BTN_PLUS, BTN_MINUS};

@@ -1,6 +1,6 @@
 #pragma once
 
-extern int lineValues[];
+extern int lineVals[];
 
 void readSensors();
 void printSensors();

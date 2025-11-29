@@ -21,11 +21,11 @@ template<typename T>
 static void putEeprom(int adr, T* mx, T* mn, int size) {
   for (int i = 0; i < size; i++) {
     EEPROM.put(adr, mx[i]);
-    adr += sizeof(int);
+    adr += sizeof(T);
   }
   for (int i = 0; i < size; i++) {
     EEPROM.put(adr, mn[i]);
-    adr += sizeof(int);
+    adr += sizeof(T);
   }
 }
 
@@ -39,8 +39,8 @@ void calibrateLine() {
     drv();
     readSensors();
     for (int i = 0; i < 4; ++i) {
-      lineCalibMax[i] = max(lineCalibMax[i], lineValues[i]);
-      lineCalibMin[i] = min(lineCalibMin[i], lineValues[i]);
+      lineCalibMax[i] = max(lineCalibMax[i], lineVals[i]);
+      lineCalibMin[i] = min(lineCalibMin[i], lineVals[i]);
     }
   }
   drv(0);

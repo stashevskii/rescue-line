@@ -9,26 +9,13 @@
 #include "tcs34725.hpp"
 
 void setup() {
-  for (int i = 0; i < 12; i++) {
-    pinMode(MOTOR_PINS[i], OUTPUT);
-  }
-  pinMode(30, OUTPUT);
-  pinMode(LED1, OUTPUT);
-  pinMode(LED2, OUTPUT);
-  digitalWrite(30, HIGH);
   Serial.begin(BAUD_RATE);
-  pinMode(BTN_SET, INPUT_PULLUP);
-  pinMode(BTN_PLUS, INPUT_PULLUP);
+  for (int i : OUTPUT_MODE) pinMode(i, OUTPUT);
+  for (int i : BUTTONS) pinMode(i, INPUT_PULLUP);
+  digitalWrite(30, HIGH);
   initOLED();
-  int adr = 0;
-  for (int i = 0; i <4; i++) {
-    EEPROM.get(adr, lineCalibMax[i]);
-    adr += sizeof(int);
-  }
-  for (int i = 0; i <4; i++) {
-    EEPROM.get(adr, lineCalibMin[i]);
-    adr += sizeof(int);
-  }
+  getCalibEeprom(0, lineCalibMax, lineCalibMin, 4);
+  getCalibEeprom(8 * sizeof(int), tcsCalibMax, tcsCalibMin, 3);
 }
 
 void run() {
@@ -37,43 +24,34 @@ void run() {
   digitalWrite(LED3, LOW);
 }
 
-void calib() {
-  u8g2.clear();
-  u8g2.drawStr(25, 25, "calibration");
-  u8g2.sendBuffer();
+void calibLine() {
+  displayText(25, 35, "Line calibration", true);
   calibrateLine();
-  u8g2.clear();
-  u8g2.drawStr(10, 10, "min:");
-  printArray(lineCalibMin,4, 20, 10);
-  u8g2.drawStr(70, 10, "max:");
-  printArray(lineCalibMax,4, 80, 10);
-  u8g2.sendBuffer();
+  displayText(10, 10, "min:", true);
+  displayArray(tcsCalibMin, 3, 20, 10);
+  displayText(70, 10, "max:", true);
+  displayArray(tcsCalibMax, 3, 80, 10);
   while (digitalRead(BTN_SET));
-  delay(300);
+  delay(250);
 }
 
-void calibCS() {
-  u8g2.clear();
-  u8g2.drawStr(25, 25, "calibration CS");
-  u8g2.sendBuffer();
+void calibTcs() {
+  displayText(25, 35, "Calibration TCS34725", true);
   calibrateTcs();
-  u8g2.clear();
-  u8g2.drawStr(10, 10, "min:");
-  printArray(tcsCalibMin, 3, 20, 10);
-  u8g2.drawStr(70, 10, "max:");
-  printArray(tcsCalibMax, 3, 80, 10);
-  u8g2.sendBuffer();
+  displayText(10, 10, "min:", true);
+  displayArray(tcsCalibMin, 3, 20, 10);
+  displayText(70, 10, "max:", true);
+  displayArray(tcsCalibMax, 3, 80, 10);
   while (digitalRead(BTN_SET));
-  delay(300);
+  delay(250);
 }
 
-void readTcs() {
+void displayTcs() {
   uint16_t a[3];
   while (digitalRead(BTN_PLUS)) {
     getRGBMap(&a[0], &a[1], &a[2]);
     u8g2.clearBuffer();
-    printArray(a, 3, 10, 10, 20);
-    u8g2.sendBuffer();
+    displayArray(a, 3, 10, 10);
   }
 }
 
@@ -83,15 +61,15 @@ const char *string_list =
   "Read CS\n"
   "Run";
 
-void loop(void) {
-  static uint8_t current_selection;
-  current_selection = u8g2.userInterfaceSelectionList(
+void loop() {
+  static uint8_t curr;
+  curr = u8g2.userInterfaceSelectionList(
     "Menu",
-    current_selection, 
+    curr, 
     string_list
   );
-  if (current_selection == 1) calib();
-  else if (current_selection == 2) calibCS();
-  else if (current_selection == 3) readTcs();
-  else if (current_selection == 4) run();
+  if (curr == 1) calibLine();
+  else if (curr == 2) calibTcs();
+  else if (curr == 3) displayTcs();
+  else if (curr == 4) run();
 }

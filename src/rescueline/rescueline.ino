@@ -6,6 +6,7 @@
 #include "oled.hpp"
 #include "lfr.hpp"
 #include "calib.hpp"
+#include "tcs34725.hpp"
 
 void setup() {
   for (int i = 0; i < 12; i++) {
@@ -39,20 +40,37 @@ void run() {
 void calib() {
   u8g2.clear();
   u8g2.drawStr(25, 25, "calibration");
+  u8g2.sendBuffer();
   calibrate();
   u8g2.clear();
   u8g2.drawStr(10, 10, "min:");
-  printArray(calibMin, N, 10, 10);
+  printArray(calibMin, N, 20, 10);
   u8g2.drawStr(70, 10, "max:");
-  printArray(calibMax, N, 70, 10);
+  printArray(calibMax, N, 80, 10);
+  u8g2.sendBuffer();
+  while (digitalRead(BTN_SET));
+  delay(300);
+}
+
+void calibCS() {
+  u8g2.clear();
+  u8g2.drawStr(25, 25, "calibration CS");
+  u8g2.sendBuffer();
+  calibrateCS();
+  u8g2.clear();
+  u8g2.drawStr(10, 10, "min:");
+  printArray(tcsMin, 3, 20, 10);
+  u8g2.drawStr(70, 10, "max:");
+  printArray(tcsMax, 3, 80, 10);
   u8g2.sendBuffer();
   while (digitalRead(BTN_SET));
   delay(300);
 }
 
 const char *string_list = 
-  "Calibration\n"
-  "Run";
+  "Line calib\n"
+  "CS calib\n"
+  "Run\n";
 
 void loop(void) {
   static uint8_t current_selection;
@@ -62,5 +80,11 @@ void loop(void) {
     string_list
   );
   if (current_selection == 1) calib();
-  else if (current_selection == 2) run();
+  else if (current_selection == 2) calibCS();
+  else if (current_selection == 3) run();
+  /*uint16_t a[3];
+  getRawRGB(&a[0], &a[1], &a[2]);
+  u8g2.clearBuffer();
+  printArray(a, 3, 10, 10, 20);
+  u8g2.sendBuffer();*/
 }

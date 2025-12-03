@@ -28,9 +28,9 @@ void calibLine() {
   displayText(25, 35, "Line calibration", true);
   calibrateLine();
   displayText(10, 10, "min:", true);
-  displayArray(tcsCalibMin, 3, 20, 10);
+  displayArray(lineCalibMin, 3, 20, 10);
   displayText(70, 10, "max:", true);
-  displayArray(tcsCalibMax, 3, 80, 10);
+  displayArray(lineCalibMax, 3, 80, 10);
   while (digitalRead(BTN_SET));
   delay(250);
 }
@@ -55,10 +55,19 @@ void displayTcs() {
   }
 }
 
+void displaySens() {
+  while (digitalRead(BTN_PLUS)) {
+    readSensors();
+    u8g2.clearBuffer();
+    displayArray(lineVals, 4, 10, 10);
+  }
+}
+
 const char *string_list = 
   "Line calib\n"
   "CS calib\n"
   "Read CS\n"
+  "Read sens\n"
   "Run";
 
 void loop() {
@@ -71,5 +80,6 @@ void loop() {
   if (curr == 1) calibLine();
   else if (curr == 2) calibTcs();
   else if (curr == 3) displayTcs();
-  else if (curr == 4) run();
+  else if (curr == 4) displaySens();
+  else if (curr == 5) run();
 }

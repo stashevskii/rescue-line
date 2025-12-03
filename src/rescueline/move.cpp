@@ -3,16 +3,11 @@
 #include "config.hpp"
 
 void setMotor(int speed, int pin1, int pin2, int pwmPin) {
-  speed = constrain(speed, -100, 200);
-  if (speed >= 0) {
-    digitalWrite(pin1, HIGH);
-    digitalWrite(pin2, LOW);
-    analogWrite(pwmPin, abs(speed));
-  } else { 
-    digitalWrite(pin1, LOW);
-    digitalWrite(pin2, HIGH);
-    analogWrite(pwmPin, abs(speed));
-  }
+  speed = constrain(speed, -255, 255);
+  bool cond = (speed >= 0);
+  digitalWrite(pin1, cond);
+  digitalWrite(pin2, !cond);
+  analogWrite(pwmPin, abs(speed));
 }
 
 void driveFront(int leftSpeed, int rightSpeed) {

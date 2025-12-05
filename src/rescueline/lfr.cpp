@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include "config.hpp"
 #include "lfr.hpp"
 #include "move.hpp"
 #include "calib.hpp"
@@ -57,13 +58,6 @@ void LFR(int speed = 100) {
       int normolized = getNorm(i);
       if (normolized > 700) ++q;
     }
-    if (q >= 2) {
-      driveFront(0, 0);
-      driveBack(0, 0);
-      delay(200);
-      driveFront(-speed, speed);
-      driveFront(-speed, speed);
-      delay(500);
-    }
+    digitalWrite(LED2, q >= 2);
   }
 }

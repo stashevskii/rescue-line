@@ -20,7 +20,7 @@ void setup() {
 
 void run() {
   digitalWrite(LED3, HIGH);
-  LFR(150);
+  LFR(100);
   digitalWrite(LED3, LOW);
 }
 
@@ -28,9 +28,9 @@ void calibLine() {
   displayText(25, 35, "Line calibration", true);
   calibrateLine();
   displayText(10, 10, "min:", true);
-  displayArray(lineCalibMin, 3, 20, 10);
-  displayText(70, 10, "max:", true);
-  displayArray(lineCalibMax, 3, 80, 10);
+  displayArray(lineCalibMin, 4, 20, 20);
+  displayText(70, 10, "max:");
+  displayArray(lineCalibMax, 4, 80, 20);
   while (digitalRead(BTN_SET));
   delay(250);
 }
@@ -39,9 +39,9 @@ void calibTcs() {
   displayText(25, 35, "Calibration TCS34725", true);
   calibrateTcs();
   displayText(10, 10, "min:", true);
-  displayArray(tcsCalibMin, 3, 20, 10);
-  displayText(70, 10, "max:", true);
-  displayArray(tcsCalibMax, 3, 80, 10);
+  displayArray(tcsCalibMin, 3, 20, 20);
+  displayText(70, 10, "max:");
+  displayArray(tcsCalibMax, 3, 80, 20);
   while (digitalRead(BTN_SET));
   delay(250);
 }

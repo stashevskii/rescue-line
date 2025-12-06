@@ -5,12 +5,14 @@
 #include "config.hpp"
 #include "lfr.hpp"
 #include "tcs34725.hpp"
+#include "oled.hpp"
 
 static constexpr int calibSpeed = 90;
 static constexpr int calibTime = 11000;
 
 int lineCalibMax[4], lineCalibMin[4];
-uint16_t tcsCalibMin[3], tcsCalibMax[3];
+uint16_t tcsCalibMinR[3], tcsCalibMaxR[3];
+uint16_t tcsCalibMinL[3], tcsCalibMaxL[3];
 
 static void drv(int s = calibSpeed) {
   driveFront(-s, s);
@@ -47,21 +49,28 @@ void calibrateLine() {
   putEeprom(0, lineCalibMax, lineCalibMin, 4);
 }
 
+static void tcsCalib(uint16_t *arr, uint16_t *v, uint8_t ch) {
+  getRawRGB(&arr[0], &arr[1], &arr[2], ch);
+  for (int i = 0; i < 3; ++i) {
+    v[i] = arr[i];
+  }
+}
+
 void calibrateTcs() {
   for (int i = 0; i < 3; ++i) {
-    tcsCalibMin[i] = 65535;
-    tcsCalibMax[i] = 0;
+    tcsCalibMinR[i] = tcsCalibMinL[i] = 65535;
+    tcsCalibMaxR[i] = tcsCalibMaxL[i] = 0;
   }
-  unsigned long tmr = millis();
   uint16_t arr[3];
-  while (millis() <= tmr + calibTime) {
-    drv();
-    getRawRGB(&arr[0], &arr[1], &arr[2]);
-    for (int i = 0; i < 3; ++i) {
-      tcsCalibMax[i] = max(tcsCalibMax[i], arr[i]);
-      tcsCalibMin[i] = min(tcsCalibMin[i], arr[i]);
-    }
-  }
-  drv(0);
-  putEeprom(8 * sizeof(int), tcsCalibMax, tcsCalibMin, 3);
+  displayText(30, 30, "WHITE", true);
+  while (digitalRead(BTN_SET));
+  tcsCalib(arr, tcsCalibMaxR, RIGHT_TCS);
+  tcsCalib(arr, tcsCalibMaxL, LEFT_TCS);
+  delay(200);
+  displayText(30, 30, "BLACK", true);
+  while (digitalRead(BTN_SET));
+  tcsCalib(arr, tcsCalibMinR, RIGHT_TCS);
+  tcsCalib(arr, tcsCalibMinL, LEFT_TCS);
+  putEeprom(8 * sizeof(int), tcsCalibMaxR, tcsCalibMinR, 3);
+  putEeprom(14 * sizeof(int), tcsCalibMaxL, tcsCalibMinL, 3);
 }

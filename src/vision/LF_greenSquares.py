@@ -2,13 +2,9 @@ import sensor
 import time
 import math
 import pyb
-import struct
 
-# The hardware I2C bus for your OpenMV Cam is always I2C bus 2.
-# i2c = pyb.I2C(4, pyb.I2C.SLAVE, addr=0x12)
-# i2c.deinit()  # Fully reset I2C device...
-# i2c = pyb.I2C(4, pyb.I2C.SLAVE, addr=0x12)
-# print("Waiting for Arduino...")
+uart = pyb.UART(3, 115200)
+uart.init(115200, bits=8, parity=None, stop=1)
 
 GRAYSCALE_THRESHOLD = [(0, 25)]
 
@@ -18,97 +14,98 @@ ROIS = [
     (0, 5, 160, 20, 0.3),
 ]
 
-# Compute the weight divisor (we're computing this so you don't have to make weights add to 1).
 weight_sum = 10
 for r in ROIS:
-    weight_sum += r[4]  # r[4] is the roi weight.
+    weight_sum += r[4]
 
-# Camera setup...
-sensor.reset()  # Initialize the camera sensor.
-sensor.set_pixformat(sensor.RGB565)  # use grayscale.
-sensor.set_framesize(sensor.QQVGA)  # use QQVGA for speed.
-sensor.skip_frames(time=2000)  # Let new settings take affect.
-sensor.set_auto_gain(False)  # must be turned off for color tracking
-sensor.set_auto_whitebal(False)  # must be turned off for color tracking
-sensor.set_hmirror(True)  # Горизонтальное зеркальное отображение
-sensor.set_vflip(True)    # Вертикальное отображение (переворот)
+sensor.reset()
+sensor.set_pixformat(sensor.RGB565)
+sensor.set_framesize(sensor.QQVGA)
+sensor.skip_frames(time=2000)
+sensor.set_auto_gain(False)
+sensor.set_auto_whitebal(False)
+sensor.set_hmirror(True)
+sensor.set_vflip(True)
 sensor.set_windowing((25, 25, 150, 150))
 
 green_threshold = (0, 100, -128, -10, -128, 127)
-clock = time.clock()  # Tracks FPS.
+clock = time.clock()
 
 while True:
-    clock.tick()  # Track elapsed milliseconds between snapshots().
-    img = sensor.snapshot()  # Take a picture and return the image.
-
-    centroid_sum = 0
+    clock.tick()
+    img = sensor.snapshot()
     lineBlobX = 0
-    a = 0
-    for r in ROIS:
-        blobs = img.find_blobs(
-            GRAYSCALE_THRESHOLD, roi=r[0:4], merge=True
-        )  # r[0:4] is roi tuple.
-        if blobs:
-            # Find the blob with the most pixels.
-            largest_blob = max(blobs, key=lambda b: b.pixels())
 
-            # Draw a rect around the blob.
-            img.draw_rectangle(largest_blob.rect())
-            img.draw_cross(largest_blob.cx(), largest_blob.cy())
-            if(a == 1):
-                if (largest_blob.pixels() >= 400):
-                    print("Cross")
-                else:
-                    print("No cross")
-            lineBlobX = largest_blob.cx()
-            centroid_sum += largest_blob.cx() * r[4]
-        a += 1
-
-    center_pos = centroid_sum / weight_sum
-
-    deflection_angle = 0
-    deflection_angle = -math.atan((center_pos - 80) / 60)
-
-    deflection_angle = math.degrees(deflection_angle)
-
-    # Находим ВСЕ зеленые пиксели
     green_blobs = img.find_blobs([green_threshold],
-    area_threshold=60,  # Минимальная площадь = 1 пиксель
-    pixels_threshold=40,
-    merge=True,       # Не сливать области
-    margin=1)          # Минимальный отступ
+        area_threshold=60,
+        pixels_threshold=40,
+        merge=False,
+        margin=1
+    )
 
     total_green_area = 0
     green_pixels_count = 0
     good_blobs = 0
     greenBlobsPos = 0
-    # Считаем общую площадь зеленого
+
     for blob in green_blobs:
-        if blob.y()>40: # Пороговое значение y от верха экрана для отсеивания ненужных меток
+        if blob.y() > 40:
             good_blobs += 1
-            if blob.x()<lineBlobX: # Пороговое значение y от верха экрана для отсеивания ненужных меток
+            if blob.x() < lineBlobX:
                 greenBlobsPos += 1
-            if blob.x()>lineBlobX: # Пороговое значение y от верха экрана для отсеивания ненужных меток
+            if blob.x() > lineBlobX:
                 greenBlobsPos += 2
         total_green_area += blob.area()
         green_pixels_count += blob.pixels()
-        img.draw_rectangle(blob.rect(), color=(255, 0, 0), thickness=1)
-    img.draw_string(5, 25, f"Blobs: {len(green_blobs)}", color=(0,255,0))
+        #img.draw_rectangle(blob.rect(), color=(255, 0, 0), thickness=1)
+
+    centroid_sum = 0
+    cross = False
+    a = 0
+    for r in ROIS:
+        blobs = img.find_blobs(GRAYSCALE_THRESHOLD, roi=r[0:4], merge=True)
+        if blobs:
+            largest_blob = max(blobs, key=lambda b: b.pixels())
+            #img.draw_rectangle(largest_blob.rect())
+            #img.draw_cross(largest_blob.cx(), largest_blob.cy())
+            if (a == 1 and largest_blob.pixels() >= 400):
+                cross = True
+            lineBlobX = largest_blob.cx()
+            centroid_sum += largest_blob.cx() * r[4]
+        a += 1
+
+    center_pos = centroid_sum / weight_sum
+    deflection_angle = -math.atan((center_pos - 80) / 60)
+    deflection_angle = math.degrees(deflection_angle)
+
+    ROI_top = ROIS[2]
+    ROI_bottom = ROIS[0]
+
+    centerY_top = ROI_top[1] + ROI_top[3]//2
+    centerY_bottom = ROI_bottom[1] + ROI_bottom[3]//2
+
+    centerX_top = 80
+    centerX_bottom = 80
+
+    green_positions = []
+
+    l, r = False, False
+
+    for blob in green_blobs:
+        relY = blob.cy() - centerY_top
+        relX = blob.cx() - centerX_bottom
+        green_positions.append((relX, relY))
+        if (relX < 0):
+            if (relY > 30): l = True
+            else: r = True
+    resp = 0
+    if cross:
+        if (l and r): resp = 1
+        elif (l): resp = 2
+        else: resp = 3
+    uart.write(str(resp) + '\n')
+
+    """img.draw_string(5, 25, f"Blobs: {len(green_blobs)}", color=(0,255,0))
     img.draw_string(5, 5, f"good_blobs: {good_blobs}", color=(255,0,0))
     img.draw_string(5, 50, f"greenBlobsPos:{greenBlobsPos}", color=(255,255,0))
-    img.draw_string(lineBlobX, 100, f"X:{lineBlobX}", color=(0, 0, 255))
-
-    # text = str(int(deflection_angle))
-    # data = struct.pack("<%ds" % len(text), text)
-
-    # try:
-    #     i2c.send(
-    #         struct.pack("<h", len(data)), timeout=10000
-    #     )
-    #     try:
-    #         i2c.send(data, timeout=10000)
-    #         print("Sent Data!")
-    #     except OSError:
-    #         pass
-    # except OSError:
-    #    pass
+    img.draw_string(lineBlobX, 100, f"X:{lineBlobX}", color=(0, 0, 255))"""

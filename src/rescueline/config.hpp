@@ -1,6 +1,6 @@
 #pragma once
 
-constexpr int BAUD_RATE = 9600;
+constexpr int BAUD_RATE = 19200;
 
 constexpr int MOTOR_LEFT_A_IN1 = 29;
 constexpr int MOTOR_LEFT_A_IN2 = 31;

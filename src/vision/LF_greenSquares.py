@@ -57,7 +57,7 @@ while True:
                 greenBlobsPos += 2
         total_green_area += blob.area()
         green_pixels_count += blob.pixels()
-        #img.draw_rectangle(blob.rect(), color=(255, 0, 0), thickness=1)
+        img.draw_rectangle(blob.rect(), color=(255, 0, 0), thickness=1)
 
     centroid_sum = 0
     cross = False
@@ -66,8 +66,8 @@ while True:
         blobs = img.find_blobs(GRAYSCALE_THRESHOLD, roi=r[0:4], merge=True)
         if blobs:
             largest_blob = max(blobs, key=lambda b: b.pixels())
-            #img.draw_rectangle(largest_blob.rect())
-            #img.draw_cross(largest_blob.cx(), largest_blob.cy())
+            img.draw_rectangle(largest_blob.rect())
+            img.draw_cross(largest_blob.cx(), largest_blob.cy())
             if (a == 1 and largest_blob.pixels() >= 400):
                 cross = True
             lineBlobX = largest_blob.cx()
@@ -95,15 +95,18 @@ while True:
         relY = blob.cy() - centerY_top
         relX = blob.cx() - centerX_bottom
         green_positions.append((relX, relY))
-        if (relX < 0):
-            if (relY > 30): l = True
+        # if (relX < 0):
+        #     if (relY > 30): l = True
+        #     else: r = True
+        if (relY > 30):
+            if (relX < 0): l = True
             else: r = True
     resp = 0
     if cross:
         if (l and r): resp = 1
         elif (l): resp = 2
         else: resp = 3
-    uart.write(str(resp) + '\n')
+    uart.write(str(resp))
 
     """img.draw_string(5, 25, f"Blobs: {len(green_blobs)}", color=(0,255,0))
     img.draw_string(5, 5, f"good_blobs: {good_blobs}", color=(255,0,0))

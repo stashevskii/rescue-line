@@ -6,18 +6,16 @@
 #include "oled.hpp"
 #include "lfr.hpp"
 #include "calib.hpp"
-#include "tcs34725.hpp"
+#include "cam.hpp"
 
 void setup() {
   Serial.begin(BAUD_RATE);
+  Serial2.begin(BAUD_RATE);
   for (int i : OUTPUT_MODE) pinMode(i, OUTPUT);
   for (int i : BUTTONS) pinMode(i, INPUT_PULLUP);
   digitalWrite(30, HIGH);
   initOLED();
-  tcs.begin();
   getCalibEeprom(0, lineCalibMax, lineCalibMin, 4);
-  getCalibEeprom(8 * sizeof(int), tcsCalibMaxR, tcsCalibMinR, 3);
-  getCalibEeprom(14 * sizeof(int), tcsCalibMaxL, tcsCalibMinL, 3);
 }
 
 void run() {
@@ -37,37 +35,6 @@ void calibLine() {
   delay(250);
 }
 
-void calibTcs() {
-  displayText(25, 35, "Calibration TCS34725", true);
-  calibrateTcs();
-  displayText(10, 10, "min1:", true);
-  displayArray(tcsCalibMinR, 3, 20, 20);
-  displayText(70, 10, "max1:");
-  displayArray(tcsCalibMaxR, 3, 80, 20);
-  while (digitalRead(BTN_SET));
-  displayText(10, 10, "min2:", true);
-  displayArray(tcsCalibMinL, 3, 20, 20);
-  displayText(70, 10, "max2:");
-  displayArray(tcsCalibMaxL, 3, 80, 20);
-  while (digitalRead(BTN_SET));
-  delay(250);
-}
-
-void displayTcs() {
-  uint16_t a[3];
-  uint8_t ch = RIGHT_TCS;
-  while (digitalRead(BTN_SET)) {
-    if (!digitalRead(BTN_PLUS)) {
-      ch = ch == RIGHT_TCS ? LEFT_TCS : RIGHT_TCS;
-      delay(30);
-    }
-    getRGBMap(&a[0], &a[1], &a[2], ch);
-    u8g2.clearBuffer();
-    displayArray(a, 3, 10, 10);
-    displayText(40, 40, (ch == RIGHT_TCS ? "RIGHT" : "LEFT"));
-  }
-}
-
 void displaySens() {
   while (digitalRead(BTN_PLUS)) {
     readSensors();
@@ -76,11 +43,18 @@ void displaySens() {
   }
 }
 
+void displayCam() {
+  while (digitalRead(BTN_PLUS)) {
+    u8g2.clearBuffer();
+    char c = getDirection();
+    displayText(50, 50, &c);
+  }
+}
+
 const char *string_list = 
   "Line calib\n"
-  "CS calib\n"
-  "Read CS\n"
   "Read sens\n"
+  "Cam\n"
   "Run";
 
 void loop() {
@@ -91,8 +65,7 @@ void loop() {
     string_list
   );
   if (curr == 1) calibLine();
-  else if (curr == 2) calibTcs();
-  else if (curr == 3) displayTcs();
-  else if (curr == 4) displaySens();
-  else if (curr == 5) run();
+  else if (curr == 2) displaySens();
+  else if (curr == 3) displayCam();
+  else if (curr == 4) run();
 }

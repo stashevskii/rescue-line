@@ -88,4 +88,3 @@ while True:
     uart.write(text + "\n")
     #if isCross == 1:
         #uart.write("c" + greenBlobsText + "\n")
-

@@ -1,8 +1,9 @@
 #include <Arduino.h>
 #include "config.hpp"
-#include "lfr.hpp"
 #include "move.hpp"
+#include "lfr.hpp"
 #include "calib.hpp"
+#include "cam.hpp"
 
 static constexpr double KP = 0.15;
 static constexpr double KD = 1.35;
@@ -11,7 +12,7 @@ static constexpr int w[4] = {1000, 2000, 3000, 4000};
 static constexpr int linePins[4] = {A14, A8, A6, A4};
 int lineVals[4];
 
-static int getNorm(int i) {
+int getNorm(int i) {
   return map(constrain(lineVals[i], lineCalibMin[i], lineCalibMax[i]), lineCalibMin[i], lineCalibMax[i], 0, 1000);
 }
 
@@ -52,12 +53,13 @@ void LFR(int speed = 100) {
     driveFront(speed - delta, speed + delta);
     driveBack(speed - delta, speed + delta);
     readSensors();
-    bool cross = true;
-    int q = 0;
-    for (int i = 0; i < 4; ++i) {
-      int normolized = getNorm(i);
-      if (normolized > 700) ++q;
+    char resp = getDirection();
+    if (resp == '1') {
+      turnRightToBlack(120, 350);
+    } else if (resp == '2') {
+      turnLeftToBlack(120, 150);
+    } else if (resp == '3') {
+      turnRightToBlack(120, 150);
     }
-    digitalWrite(LED2, q >= 2);
   }
 }

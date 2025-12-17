@@ -5,5 +5,5 @@ char getDirection() {
     char response = Serial2.read();
     return response;
   }
-  return 0;
+  return '4';
 }

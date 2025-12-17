@@ -9,8 +9,8 @@
 #include "cam.hpp"
 
 void setup() {
-  Serial.begin(BAUD_RATE);
-  Serial2.begin(BAUD_RATE);
+  Serial2.begin(115200);
+  Serial.begin(115200);
   for (int i : OUTPUT_MODE) pinMode(i, OUTPUT);
   for (int i : BUTTONS) pinMode(i, INPUT_PULLUP);
   digitalWrite(30, HIGH);
@@ -20,7 +20,7 @@ void setup() {
 
 void run() {
   digitalWrite(LED3, HIGH);
-  LFR(105);
+  LFR(100);
   digitalWrite(LED3, LOW);
 }
 
@@ -68,4 +68,11 @@ void loop() {
   else if (curr == 2) displaySens();
   else if (curr == 3) displayCam();
   else if (curr == 4) run();
+  /*char c = getDirection();
+  if (c != '4')
+    Serial.println(c);*/
+  /*if (Serial2.available()) {
+    char response = Serial2.read();
+    Serial.println(response);
+  }*/
 }

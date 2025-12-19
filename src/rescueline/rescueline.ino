@@ -20,7 +20,7 @@ void setup() {
 
 void run() {
   digitalWrite(LED3, HIGH);
-  LFR(100);
+  LFR(90);
   digitalWrite(LED3, LOW);
 }
 

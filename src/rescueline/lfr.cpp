@@ -5,8 +5,8 @@
 #include "calib.hpp"
 #include "cam.hpp"
 
-static constexpr double KP = 0.15;
-static constexpr double KD = 1.35;
+static constexpr double KP = 0.1;
+static constexpr double KD = 1.1;
 static constexpr int THRESHOLD = 250;
 static constexpr int w[4] = {1000, 2000, 3000, 4000};
 static constexpr int linePins[4] = {A14, A8, A6, A4};
@@ -55,11 +55,17 @@ void LFR(int speed = 100) {
     readSensors();
     char resp = getDirection();
     if (resp == '1') {
-      turnRightToBlack(120, 350);
+      digitalWrite(LED1, 1);
+      turnRightToBlack(140, 350);
+      digitalWrite(LED1, 0);
     } else if (resp == '2') {
-      turnLeftToBlack(120, 150);
+      digitalWrite(LED1, 1);
+      turnLeftToBlack(140, 150);
+      digitalWrite(LED1, 0);
     } else if (resp == '3') {
-      turnRightToBlack(120, 150);
+      digitalWrite(LED1, 1);
+      turnRightToBlack(140, 150);
+      digitalWrite(LED1, 0);
     }
   }
 }

@@ -1,9 +1,9 @@
 #include <Arduino.h>
 
-char getDirection() {
+String getDirection() {
+  String received_string = "";
   if (Serial2.available()) {
-    char response = Serial2.read();
-    return response;
+    String received_string = Serial2.readStringUntil('\n');
+    return received_string;
   }
-  return '4';
 }

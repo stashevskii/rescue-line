@@ -1,37 +1,162 @@
 import sensor
+import image
 import time
 import math
 import pyb
 
-# The hardware I2C bus for your OpenMV Cam is always I2C bus 2.
-uart = pyb.UART(3, 19200, timeout_char=200)
-# GRAYSCALE_THRESHOLD = [(0, 30)]
 
-GRAYSCALE_THRESHOLD = [(0, 25)]
-ROIS = [
-    (0, 80, 160, 20, 0.7),
-    (0, 40, 160, 20, 0.3),
-    (0, 5, 160, 20, 0.3),
+# Настройка UART
+uart = pyb.UART(3, 19200)
+uart.init(19200, bits=8, parity=None, stop=1)
+
+# Настройка камеры
+sensor.reset()
+sensor.set_pixformat(sensor.GRAYSCALE)
+sensor.set_framesize(sensor.QQVGA)
+sensor.skip_frames(time=2000)
+sensor.set_auto_gain(False)
+sensor.set_auto_whitebal(False)
+sensor.set_hmirror(True)
+sensor.set_vflip(True)
+
+# Порог для черной линии
+BLACK_THRESHOLD = (0, 40)
+
+# Зоны сканирования (многоуровневые)
+SCAN_ZONES = [
+    {"y": 100, "height": 20, "weight": 0.2},  # Нижняя зона
+    {"y": 70, "height": 20, "weight": 0.3},   # Средняя зона
+    {"y": 40, "height": 20, "weight": 0.5},   # Верхняя зона
 ]
 
+# Центральное окно для фильтрации
+CENTER_WINDOW_WIDTH = 80
+CENTER_WINDOW_X = (160 - CENTER_WINDOW_WIDTH) // 2
 
-# Compute the weight divisor (we're computing this so you don't have to make weights add to 1).
-weight_sum = 0
-for r in ROIS:
-    weight_sum += r[4]  # r[4] is the roi weight.
+clock = time.clock()
 
-# Camera setup...
-sensor.reset()  # Initialize the camera sensor.
-sensor.set_pixformat(sensor.RGB565)  # use grayscale.
-sensor.set_framesize(sensor.QQVGA)  # use QQVGA for speed.
-sensor.skip_frames(time=2000)  # Let new settings take affect.
-sensor.set_auto_gain(False)  # must be turned off for color tracking
-sensor.set_auto_whitebal(False)  # must be turned off for color tracking
-sensor.set_vflip(True)
-sensor.set_windowing((25, 25, 150, 150))
-clock = time.clock()  # Tracks FPS.
+def find_line_in_zones(img):
+    """Находит линию в нескольких зонах сканирования"""
+    centroids = []
+    total_weight = 0
 
-while True:
-    pyb.LED(2).on()
-    uart.write("666\n")
-    time.sleep(1)
+    for zone in SCAN_ZONES:
+        # Сканируем только центральную часть каждой зоны
+        roi = (
+            CENTER_WINDOW_X,
+            zone["y"],
+            CENTER_WINDOW_WIDTH,
+            zone["height"]
+        )
+
+        # Ищем черные blob'ы в ROI
+        blobs = img.find_blobs([BLACK_THRESHOLD],
+                              roi=roi,
+                              merge=True,
+                              margin=10,
+                              area_threshold=50,
+                              pixels_threshold=50)
+
+        if blobs:
+            # Берем самый большой blob в этой зоне
+            largest_blob = max(blobs, key=lambda b: b.area())
+
+            # Визуализация
+            img.draw_rectangle(largest_blob.rect(), color=150)
+            img.draw_cross(largest_blob.cx(), largest_blob.cy(), color=200)
+
+            # Добавляем центроид с весом
+            centroids.append({
+                "x": largest_blob.cx(),
+                "y": largest_blob.cy(),
+                "weight": zone["weight"]
+            })
+            total_weight += zone["weight"]
+
+    return centroids, total_weight
+
+def calculate_line_from_centroids(centroids, total_weight):
+    """Вычисляет линию по центроидам из разных зон"""
+    if not centroids or total_weight == 0:
+        return None, 0
+
+    # Вычисляем взвешенный центр линии
+    weighted_x_sum = sum(c["x"] * c["weight"] for c in centroids)
+    weighted_y_sum = sum(c["y"] * c["weight"] for c in centroids)
+
+    avg_x = weighted_x_sum / total_weight
+    avg_y = weighted_y_sum / total_weight
+
+    # Для простоты считаем вертикальную линию через этот центр
+    # В реальности можно делать линейную регрессию
+    return (avg_x, avg_y), avg_x
+
+def calculate_steering_angle(line_center_x, img_center_x=80):
+    """Вычисляет угол поворота"""
+    # Простое пропорциональное управление
+    error = line_center_x - img_center_x
+
+    # Коэффициент пропорциональности (настраивается)
+    Kp = 0.8
+
+    # Угол поворота
+    angle = -Kp * error  # Минус для инвертирования
+
+    # Ограничение угла
+    MAX_ANGLE = 45
+    if angle > MAX_ANGLE:
+        angle = MAX_ANGLE
+    elif angle < -MAX_ANGLE:
+        angle = -MAX_ANGLE
+
+    return angle, error
+
+def main_blob_version():
+    prev_angle = 0
+    prev_center = 80
+    lost_counter = 0
+    MAX_LOST = 10  # Максимальное количество кадров без линии
+
+    print("Starting blob-based line follower...")
+
+    while True:
+        clock.tick()
+        img = sensor.snapshot()
+
+        # Рисуем центральное окно
+        img.draw_rectangle(CENTER_WINDOW_X, 0,
+                          CENTER_WINDOW_WIDTH, sensor.height(),
+                          color=100, thickness=1)
+
+        # Ищем линию в зонах
+        centroids, total_weight = find_line_in_zones(img)
+
+        # Вычисляем центр линии
+        line_info, line_center_x = calculate_line_from_centroids(centroids, total_weight)
+
+        if line_info:
+            lost_counter = 0  # Сброс счетчика потерь
+
+            # Вычисляем угол поворота
+            angle, error = calculate_steering_angle(line_center_x)
+
+            # Фильтрация угла
+            filtered_angle = angle * 0.7 + prev_angle * 0.3
+            prev_angle = filtered_angle
+            prev_center = line_center_x
+
+            # Рисуем линию от центра к центроидам
+            for centroid in centroids:
+                img.draw_line(int(line_center_x), int(line_info[1]),
+                            centroid["x"], centroid["y"],
+                            color=200, thickness=1)
+
+        # Отправка данных
+        angle_int = int(filtered_angle)
+
+        # Отправка по UART
+        uart.write(str(angle_int) + "\n")
+
+        # Отображение на изображении
+
+        time.sleep_ms(20)

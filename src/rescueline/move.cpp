@@ -22,7 +22,7 @@ void driveBack(int leftSpeed, int rightSpeed) {
 }
 
 void turnRightToBlack(int speed, int t) {
-  driveFront(speed, -speed);
+  driveFront(speed, speed);
   driveBack(speed, -speed);
   delay(t);
   driveFront(speed, -speed);

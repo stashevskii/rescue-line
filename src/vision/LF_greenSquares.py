@@ -1,9 +1,9 @@
 import sensor
 import time
 import pyb
-
-uart = pyb.UART(3, 115200)
-uart.init(115200, bits=8, parity=None, stop=1)
+import math
+uart = pyb.UART(3, 19200)
+uart.init(19200, bits=8, parity=None, stop=1)
 
 GRAYSCALE_THRESHOLD = [(0, 25)]
 
@@ -13,7 +13,7 @@ ROIS = [
     (0, 5, 160, 20, 0.3),
 ]
 
-weight_sum = 10
+weight_sum = 0
 for r in ROIS:
     weight_sum += r[4]
 
@@ -21,11 +21,9 @@ sensor.reset()
 sensor.set_pixformat(sensor.RGB565)
 sensor.set_framesize(sensor.QQVGA)
 sensor.skip_frames(time=2000)
-sensor.set_auto_gain(False)
+sensor.set_auto_gain(True)
 sensor.set_auto_whitebal(False)
-sensor.set_hmirror(True)
-sensor.set_vflip(True)
-sensor.set_windowing((25, 25, 150, 150))
+# sensor.set_windowing((10, 0, 50, 150))
 
 green_threshold = (0, 100, -128, -10, -128, 127)
 clock = time.clock()
@@ -45,7 +43,7 @@ while True:
         img.draw_rectangle(blob.rect(), color=(255, 0, 0), thickness=1)
 
     cross = False
-
+    centroid_sum = 0
     low_blob_x, mid_blob_y = 0, 0
     for i in range(len(ROIS)):
         r = ROIS[i]
@@ -54,12 +52,16 @@ while True:
             largest = max(blobs, key=lambda b: b.pixels())
             img.draw_rectangle(largest.rect())
             img.draw_cross(largest.cx(), largest.cy())
+            centroid_sum += largest.cx() * r[4]
             if i == 0:
                 low_blob_x = largest.cx()
             elif i == 1 and largest.pixels() >= 400:
                 mid_blob_y = largest.cy()
                 cross = True
-
+    center_pos = centroid_sum / weight_sum
+    deflection_angle = -math.atan((center_pos - 80) / 60)
+    deflection_angle = math.degrees(deflection_angle)
+    deflAngtxt = str(int(deflection_angle))
     l, r = False, False
     for blob in green_blobs:
         relY = blob.cy() - mid_blob_y
@@ -73,4 +75,5 @@ while True:
         if (l and r): resp = 1
         elif (l): resp = 2
         else: resp = 3
-    uart.write(str(resp))
+    uart.write(deflAngtxt + "\n")
+    print(deflAngtxt)

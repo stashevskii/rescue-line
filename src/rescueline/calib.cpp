@@ -6,10 +6,10 @@
 #include "lfr.hpp"
 #include "oled.hpp"
 
-static constexpr int calibSpeed = 40;
+static constexpr int calibSpeed = 90;
 static constexpr int calibTime = 11000;
 
-int lineCalibMax[6], lineCalibMin[6];
+int lineCalibMax[4], lineCalibMin[4];
 
 static void drv(int s = calibSpeed) {
   driveFront(-s, s);
@@ -29,7 +29,7 @@ static void putEeprom(int adr, T* mx, T* mn, int size) {
 }
 
 void calibrateLine() {
-  for (int i = 0; i < 6; ++i) {
+  for (int i = 0; i < 4; ++i) {
     lineCalibMin[i] = 1000;
     lineCalibMax[i] = 0;
   }
@@ -37,11 +37,11 @@ void calibrateLine() {
   while (millis() <= tmr + calibTime) {
     drv();
     readSensors();
-    for (int i = 0; i < 6; ++i) {
+    for (int i = 0; i < 4; ++i) {
       lineCalibMax[i] = max(lineCalibMax[i], lineVals[i]);
       lineCalibMin[i] = min(lineCalibMin[i], lineVals[i]);
     }
   }
   drv(0);
-  putEeprom(0, lineCalibMax, lineCalibMin, 6);
+  putEeprom(0, lineCalibMax, lineCalibMin, 4);
 }

@@ -9,19 +9,21 @@
 #include "cam.hpp"
 
 void setup() {
+  tone(47, 300, 20);
   Serial2.begin(19200);
   Serial.begin(19200);
   for (int i : OUTPUT_MODE) pinMode(i, OUTPUT);
   for (int i : BUTTONS) pinMode(i, INPUT_PULLUP);
   digitalWrite(30, HIGH);
   initOLED();
-  getCalibEeprom(0, lineCalibMax, lineCalibMin, 6);
-  Serial.println("START");
+  getCalibEeprom(0, lineCalibMax, lineCalibMin, 4);
 }
 
 void run() {
   digitalWrite(LED3, HIGH);
-  LFR(70);
+  while (1) {
+    CamLFR(120);
+  }
   digitalWrite(LED3, LOW);
 }
 
@@ -69,4 +71,11 @@ void loop() {
   else if (curr == 2) displaySens();
   else if (curr == 3) displayCam();
   else if (curr == 4) run();
+  /*char c = getDirection();
+  if (c != '4')
+    Serial.println(c);*/
+  /*if (Serial2.available()) {
+    char response = Serial2.read();
+    Serial.println(response);
+  }*/
 }

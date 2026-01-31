@@ -2,7 +2,7 @@
 
 #include <EEPROM.h>
 
-extern int lineCalibMax[6], lineCalibMin[6];
+extern int lineCalibMax[4], lineCalibMin[4];
 
 void calibrateLine();
 void calibrateTcs();
